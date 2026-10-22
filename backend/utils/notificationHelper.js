@@ -13,7 +13,10 @@ const createNotification = async ({ userId, title, message, type, priority, rela
       actionUrl: actionUrl || null,
     })
   } catch (error) {
-    console.error('Failed to create notification:', error.message)
+    // Log only in development to avoid exposing errors in production
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Failed to create notification:', error.message);
+    }
   }
 }
 

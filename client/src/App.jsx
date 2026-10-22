@@ -13,7 +13,6 @@ import BillsPage from './pages/BillsPage'
 import EMRPage from './pages/EMRPage'
 import LabPage from './pages/LabPage'
 import PharmacyPage from './pages/PharmacyPage'
-import PrescriptionsPage from './pages/PrescriptionsPage'
 import BedsPage from './pages/BedsPage'
 import AdmissionsPage from './pages/AdmissionsPage'
 import DepartmentsPage from './pages/DepartmentsPage'
@@ -114,13 +113,7 @@ function App() {
           </PrivateRoute>
         } />
 
-        <Route path="/prescriptions" element={
-          <PrivateRoute>
-            <RoleRoute allowedRoles={['patient','doctor','pharmacist','admin','nurse']}>
-              <PrescriptionsPage />
-            </RoleRoute>
-          </PrivateRoute>
-        } />
+        
 
         {/* Beds — admin and receptionist only */}
         <Route path="/beds" element={

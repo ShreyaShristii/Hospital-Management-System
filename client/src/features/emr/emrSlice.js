@@ -8,8 +8,12 @@ const config = () => ({ headers: { Authorization: `Bearer ${getToken()}` } })
 
 export const getEMRs = createAsyncThunk('emr/getAll', async (params = {}, thunkAPI) => {
   try {
-    const query = new URLSearchParams(params).toString()
-    const res = await axios.get(`${API}/emrs?${query}`, config())
+    const queryParams = new URLSearchParams({
+      page: params.page || 1,
+      limit: params.limit || 10,
+      search: params.search || '',
+    }).toString()
+    const res = await axios.get(`${API}/emrs?${queryParams}`, config())
     return res.data
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || 'Failed to fetch EMRs')
@@ -60,6 +64,7 @@ const emrSlice = createSlice({
     total: 0,
     page: 1,
     pages: 1,
+    pageSize: 10,
     isLoading: false,
     error: null,
   },
@@ -72,10 +77,11 @@ const emrSlice = createSlice({
       .addCase(getEMRs.pending, (state) => { state.isLoading = true; state.error = null })
       .addCase(getEMRs.fulfilled, (state, action) => {
         state.isLoading = false
-        state.emrs = Array.isArray(action.payload) ? action.payload : (action.payload.emrs || [])
-        state.total = action.payload.total || (Array.isArray(action.payload) ? action.payload.length : 0)
+        state.emrs = action.payload.data || action.payload
+        state.total = action.payload.total || 0
         state.page = action.payload.page || 1
         state.pages = action.payload.pages || 1
+        state.pageSize = action.payload.pageSize || 10
       })
       .addCase(getEMRs.rejected, (state, action) => { state.isLoading = false; state.error = action.payload })
 

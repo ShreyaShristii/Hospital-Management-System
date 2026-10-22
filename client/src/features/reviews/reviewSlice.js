@@ -6,9 +6,14 @@ const API = API_BASE
 const getToken = () => localStorage.getItem('token')
 const config = () => ({ headers: { Authorization: `Bearer ${getToken()}` } })
 
-export const getReviews = createAsyncThunk('reviews/getAll', async (_, thunkAPI) => {
+export const getReviews = createAsyncThunk('reviews/getAll', async (params = {}, thunkAPI) => {
   try {
-    const res = await axios.get(`${API}/reviews`, config())
+    const queryParams = new URLSearchParams(
+      params.all
+        ? { all: 'true' }
+        : { page: params.page || 1, limit: params.limit || 10, search: params.search || '' }
+    ).toString()
+    const res = await axios.get(`${API}/reviews?${queryParams}`, config())
     return res.data
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || 'Failed to fetch reviews')
@@ -48,6 +53,10 @@ const reviewSlice = createSlice({
     reviews: [],
     isLoading: false,
     error: null,
+    total: 0,
+    page: 1,
+    pages: 1,
+    pageSize: 10,
   },
   reducers: {
     clearReviewError: (state) => { state.error = null }
@@ -57,7 +66,11 @@ const reviewSlice = createSlice({
       .addCase(getReviews.pending, (state) => { state.isLoading = true; state.error = null })
       .addCase(getReviews.fulfilled, (state, action) => {
         state.isLoading = false
-        state.reviews = action.payload
+        state.reviews = action.payload.data || action.payload
+        state.total = action.payload.total || 0
+        state.page = action.payload.page || 1
+        state.pages = action.payload.pages || 1
+        state.pageSize = action.payload.pageSize || 10
       })
       .addCase(getReviews.rejected, (state, action) => {
         state.isLoading = false

@@ -178,8 +178,8 @@ function DoctorDashboard() {
   const { patients } = useSelector((state) => state.patients)
 
   useEffect(() => {
-    dispatch(getAppointments())
-    dispatch(getPatients())
+    dispatch(getAppointments({ all: true }))
+    dispatch(getPatients({ all: true }))
   }, [dispatch])
 
   const today = new Date().toISOString().split('T')[0]

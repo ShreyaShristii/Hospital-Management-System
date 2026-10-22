@@ -8,9 +8,14 @@ const config = () => ({
   headers: { Authorization: `Bearer ${getToken()}` }
 })
 
-export const getDoctors = createAsyncThunk('doctors/getAll', async (_, thunkAPI) => {
+export const getDoctors = createAsyncThunk('doctors/getAll', async (params = {}, thunkAPI) => {
   try {
-    const res = await axios.get(`${API}/doctors`, config())
+    const queryParams = new URLSearchParams(
+      params.all
+        ? { all: 'true' }
+        : { page: params.page || 1, limit: params.limit || 10, search: params.search || '' }
+    ).toString()
+    const res = await axios.get(`${API}/doctors?${queryParams}`, config())
     return res.data
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response.data.message)
@@ -60,6 +65,10 @@ const doctorSlice = createSlice({
     doctor: null,
     isLoading: false,
     error: null,
+    total: 0,
+    page: 1,
+    pages: 1,
+    pageSize: 10,
   },
   reducers: {
     clearDoctor: (state) => { state.doctor = null }
@@ -69,7 +78,11 @@ const doctorSlice = createSlice({
       .addCase(getDoctors.pending, (state) => { state.isLoading = true })
       .addCase(getDoctors.fulfilled, (state, action) => {
         state.isLoading = false
-        state.doctors = action.payload
+        state.doctors = action.payload.data || action.payload
+        state.total = action.payload.total || 0
+        state.page = action.payload.page || 1
+        state.pages = action.payload.pages || 1
+        state.pageSize = action.payload.pageSize || 10
       })
       .addCase(getDoctors.rejected, (state, action) => {
         state.isLoading = false

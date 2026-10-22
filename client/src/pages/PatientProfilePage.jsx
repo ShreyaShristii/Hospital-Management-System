@@ -12,7 +12,7 @@ function PatientProfilePage() {
 
   useEffect(() => {
     if (!patients || patients.length === 0) {
-      dispatch(getPatients())
+      dispatch(getPatients({ all: true }))
     }
   }, [dispatch, patients])
 

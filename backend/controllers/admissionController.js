@@ -36,7 +36,12 @@ const admitPatient = async (req, res) => {
           actionUrl: '/admissions'
         })
       }
-    } catch (e) { console.error('Notification error:', e.message) }
+    } catch (e) {
+      // Notification errors should not fail the admission creation
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Notification error:', e.message);
+      }
+    }
 
     const populated = await populateAdmission(Admission.findById(admission._id))
     res.status(201).json({ message: 'Patient admitted successfully', admission: populated });
@@ -73,7 +78,12 @@ const dischargePatient = async (req, res) => {
           actionUrl: '/admissions'
         })
       }
-    } catch (e) { console.error('Notification error:', e.message) }
+    } catch (e) {
+      // Notification errors should not fail the discharge
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Notification error:', e.message);
+      }
+    }
 
     const populated = await populateAdmission(Admission.findById(admission._id))
     res.status(200).json({ message: 'Patient discharged successfully', admission: populated });
@@ -84,8 +94,31 @@ const dischargePatient = async (req, res) => {
 
 const getAllAdmissions = async (req, res) => {
   try {
-    const admissions = await populateAdmission(Admission.find().sort({ admissionDate: -1 }))
-    res.status(200).json(admissions);
+    const { search, status } = req.query;
+    const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
+    const { page, limit, skip } = getPaginationParams(req.query);
+
+    let filter = {};
+    if (status) filter.status = status;
+    if (search) {
+      filter = {
+        ...filter,
+        $or: [
+          { 'patientId.userId.name': { $regex: search, $options: 'i' } },
+          { 'bedId.bedNumber': { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
+    const total = await Admission.countDocuments(filter);
+    const admissions = await populateAdmission(
+      Admission.find(filter)
+        .sort({ admissionDate: -1 })
+        .skip(skip)
+        .limit(limit)
+    );
+
+    res.status(200).json(getPaginationResponse(admissions, total, page, limit));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -55,8 +55,29 @@ const addDoctor = async (req, res) => {
 
 const getAllDoctors = async (req, res) => {
   try {
-    const doctors = await Doctor.find().populate('userId', 'name email phone');
-    res.status(200).json(doctors);
+    const { search } = req.query;
+    const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
+    const { page, limit, skip } = getPaginationParams(req.query);
+
+    let filter = {};
+    if (search) {
+      filter = {
+        $or: [
+          { 'userId.name': { $regex: search, $options: 'i' } },
+          { specialization: { $regex: search, $options: 'i' } },
+          { degree: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
+    const total = await Doctor.countDocuments(filter);
+    const doctors = await Doctor.find(filter)
+      .populate('userId', 'name email phone')
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    res.status(200).json(getPaginationResponse(doctors, total, page, limit));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

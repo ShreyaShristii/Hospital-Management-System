@@ -1,5 +1,7 @@
 # Hospital Management System (HMS)
 
+> ⚠️ **SECURITY NOTICE**: Please read [SECURITY_SETUP.md](./SECURITY_SETUP.md) before starting development. This project includes security hardening measures that require proper environment configuration.
+
 ## Tech Stack
 
 ### Frontend

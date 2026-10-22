@@ -22,8 +22,8 @@ function AdmissionForm({ admissionToEdit, onClose }) {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    dispatch(getPatients())
-    dispatch(getDoctors())
+    dispatch(getPatients({ all: true }))
+    dispatch(getDoctors({ all: true }))
     dispatch(getAvailableBeds())
   }, [dispatch])
 
@@ -78,11 +78,12 @@ function AdmissionForm({ admissionToEdit, onClose }) {
       width: '100%', height: '100%',
       background: 'rgba(0,0,0,0.5)',
       display: 'flex', justifyContent: 'center', alignItems: 'center',
-      zIndex: 1000
+      zIndex: 1000,
+      padding: '10px'
     }}>
       <div style={{
         background: 'white', padding: '30px',
-        borderRadius: '8px', width: '500px',
+        borderRadius: '8px', width: '100%', maxWidth: '500px',
         maxHeight: '90vh', overflowY: 'auto'
       }}>
         <h3 style={{ color: '#2c3e50', marginBottom: '20px' }}>

@@ -30,7 +30,12 @@ const addBill = async (req, res) => {
           actionUrl: '/bills'
         })
       }
-    } catch (e) { console.error('Notification error:', e.message) }
+    } catch (e) {
+      // Notification errors should not fail the bill creation
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Notification error:', e.message);
+      }
+    }
 
     const populated = await populateBill(Bill.findById(bill._id))
     res.status(201).json({ message: 'Bill created successfully', bill: populated });
@@ -42,26 +47,45 @@ const addBill = async (req, res) => {
 const getAllBills = async (req, res) => {
   try {
     const { role, id: userId } = req.user;
+    const { search, status } = req.query;
+    const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
+    const { page, limit, skip } = getPaginationParams(req.query);
+
     let filter = {};
 
     if (role === 'patient') {
-      // ✅ Look up Patient._id from userId — same fix as appointments
       const patient = await Patient.findOne({ userId });
       if (!patient) return res.status(404).json({ message: 'Patient profile not found' });
       filter.patientId = patient._id;
     }
 
     if (role === 'doctor') {
-      // ✅ Look up Doctor._id from userId
       const doctor = await Doctor.findOne({ userId });
       if (!doctor) return res.status(404).json({ message: 'Doctor profile not found' });
       filter.doctorId = doctor._id;
     }
 
-    // admin and receptionist — filter stays {} so they see all bills
+    if (status) filter.paymentStatus = status;
 
-    const bills = await populateBill(Bill.find(filter).sort({ createdAt: -1 }))
-    res.status(200).json(bills);
+    if (search) {
+      filter = {
+        ...filter,
+        $or: [
+          { 'patientId.userId.name': { $regex: search, $options: 'i' } },
+          { items: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
+    const total = await Bill.countDocuments(filter);
+    const bills = await populateBill(
+      Bill.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+    );
+
+    res.status(200).json(getPaginationResponse(bills, total, page, limit));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -118,4 +142,4 @@ const deleteBill = async (req, res) => {
   }
 };
 
-module.exports = { addBill, getAllBills, getBillById, updateBill, deleteBill };
+module.exports = { addBill, getAllBills, getBillById, updateBill, deleteBill }

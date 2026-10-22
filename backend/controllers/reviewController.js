@@ -65,8 +65,32 @@ const addReview = async (req, res) => {
 
 const getAllReviews = async (req, res) => {
   try {
-    const reviews = await populateReview(Review.find().sort({ createdAt: -1 }))
-    res.status(200).json(reviews);
+    const { search, rating } = req.query;
+    const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
+    const { page, limit, skip } = getPaginationParams(req.query);
+
+    let filter = {};
+    if (rating) filter.rating = parseInt(rating);
+    if (search) {
+      filter = {
+        ...filter,
+        $or: [
+          { 'patientId.userId.name': { $regex: search, $options: 'i' } },
+          { 'staffId.userId.name': { $regex: search, $options: 'i' } },
+          { reviewText: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
+    const total = await Review.countDocuments(filter);
+    const reviews = await populateReview(
+      Review.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+    );
+
+    res.status(200).json(getPaginationResponse(reviews, total, page, limit));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

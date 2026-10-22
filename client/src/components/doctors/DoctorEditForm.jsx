@@ -115,7 +115,7 @@ function DoctorEditForm({ doctorId }) {
       await dispatch(updateDoctor({ id: doctorId, data: doctorSubmitData })).unwrap()
 
       // Refetch doctor data to ensure persistence
-      await dispatch(getDoctors())
+      await dispatch(getDoctors({ all: true }))
 
       setMessage('Profile updated successfully!')
       setFormData({

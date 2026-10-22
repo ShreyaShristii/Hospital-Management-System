@@ -23,8 +23,8 @@ function BillForm({ billToEdit, onClose }) {
   ])
 
   useEffect(() => {
-    dispatch(getPatients())
-    dispatch(getDoctors())
+    dispatch(getPatients({ all: true }))
+    dispatch(getDoctors({ all: true }))
   }, [dispatch])
 
   useEffect(() => {
@@ -94,11 +94,12 @@ function BillForm({ billToEdit, onClose }) {
       width: '100%', height: '100%',
       background: 'rgba(0,0,0,0.5)',
       display: 'flex', justifyContent: 'center', alignItems: 'center',
-      zIndex: 1000
+      zIndex: 1000,
+      padding: '10px'
     }}>
       <div style={{
         background: 'white', padding: '30px',
-        borderRadius: '8px', width: '560px',
+        borderRadius: '8px', width: '100%', maxWidth: '560px',
         maxHeight: '90vh', overflowY: 'auto'
       }}>
         <h3 style={{ color: '#2c3e50', marginBottom: '20px' }}>

@@ -23,18 +23,19 @@ const orderLabTest = async (req, res) => {
 const getAllLabTests = async (req, res) => {
   try {
     const { role, id: userId } = req.user;
+    const { search, status } = req.query;
+    const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
+    const { page, limit, skip } = getPaginationParams(req.query);
 
     let filter = {};
     
     if (role === 'patient') {
-      // Look up the Patient document by userId
       const patient = await Patient.findOne({ userId });
       if (!patient) {
         return res.status(404).json({ message: 'Patient profile not found' });
       }
       filter = { patientId: patient._id };
     } else if (role === 'doctor') {
-      // Look up the Doctor document by userId
       const doctor = await Doctor.findOne({ userId });
       if (!doctor) {
         return res.status(404).json({ message: 'Doctor profile not found' });
@@ -42,8 +43,26 @@ const getAllLabTests = async (req, res) => {
       filter = { doctorId: doctor._id };
     }
 
-    const labs = await populateLab(Lab.find(filter).sort({ requestedDate: -1 }))
-    res.status(200).json(labs);
+    if (status) filter.status = status;
+    if (search) {
+      filter = {
+        ...filter,
+        $or: [
+          { 'patientId.userId.name': { $regex: search, $options: 'i' } },
+          { testType: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
+    const total = await Lab.countDocuments(filter);
+    const labs = await populateLab(
+      Lab.find(filter)
+        .sort({ requestedDate: -1 })
+        .skip(skip)
+        .limit(limit)
+    );
+
+    res.status(200).json(getPaginationResponse(labs, total, page, limit));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -96,7 +115,12 @@ const updateLabTest = async (req, res) => {
           })
         }
       }
-    } catch (e) { console.error('Notification error:', e.message) }
+    } catch (e) {
+      // Notification errors should not fail the lab test update
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Notification error:', e.message);
+      }
+    }
 
     res.status(200).json({ message: 'Lab test updated successfully', lab });
   } catch (error) {

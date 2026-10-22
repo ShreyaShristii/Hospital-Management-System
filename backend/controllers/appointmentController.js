@@ -60,7 +60,12 @@ const addAppointment = async (req, res) => {
           actionUrl: '/appointments'
         })
       }
-    } catch (e) { console.error('Notification error:', e.message) }
+    } catch (e) {
+      // Notification errors should not fail the appointment creation
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Notification error:', e.message);
+      }
+    }
 
     const populated = await Appointment.findById(appointment._id)
       .populate({ path: 'patientId', populate: { path: 'userId', select: 'name' } })
@@ -82,7 +87,8 @@ const getAllAppointments = async (req, res) => {
       sortBy = 'appointmentDate',
       order = 'desc',
       page = 1,
-      limit = 10
+      limit = 10,
+      all
     } = req.query;
 
     let filter = {};
@@ -107,16 +113,21 @@ const getAllAppointments = async (req, res) => {
       filter.appointmentDate = { $gte: start, $lt: end };
     }
 
+    const fetchAll = all === 'true';
     const sortOrder = order === 'asc' ? 1 : -1;
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const skip = fetchAll ? 0 : (parseInt(page) - 1) * parseInt(limit);
     const total = await Appointment.countDocuments(filter);
 
-    let appointments = await Appointment.find(filter)
+    let query = Appointment.find(filter)
       .populate({ path: 'patientId', populate: { path: 'userId', select: 'name' } })
       .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name' }, select: 'userId specialization' })
-      .sort({ [sortBy]: sortOrder })
-      .skip(skip)
-      .limit(parseInt(limit));
+      .sort({ [sortBy]: sortOrder });
+
+    if (!fetchAll) {
+      query = query.skip(skip).limit(parseInt(limit));
+    }
+
+    let appointments = await query;
 
     // Post-populate search (by name, doctor, specialization, reason)
     if (search) {
@@ -132,8 +143,8 @@ const getAllAppointments = async (req, res) => {
     res.status(200).json({
       appointments,
       total,
-      page: parseInt(page),
-      pages: Math.ceil(total / parseInt(limit)),
+      page: fetchAll ? 1 : parseInt(page),
+      pages: fetchAll ? 1 : Math.ceil(total / parseInt(limit)),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -214,7 +225,12 @@ const updateAppointment = async (req, res) => {
           })
         }
       }
-    } catch (e) { console.error('Notification error:', e.message) }
+    } catch (e) {
+      // Notification errors should not fail the appointment update
+      if (process.env.NODE_ENV !== 'production') {
+        console.error('Notification error:', e.message);
+      }
+    }
 
     res.status(200).json({ message: 'Appointment updated successfully', appointment });
   } catch (error) {

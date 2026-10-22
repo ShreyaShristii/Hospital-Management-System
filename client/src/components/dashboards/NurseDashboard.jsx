@@ -9,7 +9,7 @@ function NurseDashboard() {
   const { patients } = useSelector((state) => state.patients)
 
   useEffect(() => {
-    dispatch(getPatients())
+    dispatch(getPatients({ all: true }))
   }, [dispatch])
 
   const critical = patients.filter(p => p.currentHealthStatus === 'Critical')

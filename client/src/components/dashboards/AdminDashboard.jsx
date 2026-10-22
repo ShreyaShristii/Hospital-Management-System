@@ -198,9 +198,9 @@ function AdminDashboard() {
   const { staff } = useSelector((state) => state.staff)
 
   useEffect(() => {
-    dispatch(getPatients())
-    dispatch(getDoctors())
-    dispatch(getAppointments())
+    dispatch(getPatients({ all: true }))
+    dispatch(getDoctors({ all: true }))
+    dispatch(getAppointments({ all: true }))
     dispatch(getBills())
     dispatch(getStaff())
   }, [dispatch])

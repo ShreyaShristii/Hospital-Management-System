@@ -21,8 +21,28 @@ const addMedicine = async (req, res) => {
 
 const getAllMedicines = async (req, res) => {
   try {
-    const medicines = await Pharmacy.find();
-    res.status(200).json(medicines);
+    const { search } = req.query;
+    const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
+    const { page, limit, skip } = getPaginationParams(req.query);
+
+    let filter = {};
+    if (search) {
+      filter = {
+        $or: [
+          { medicineName: { $regex: search, $options: 'i' } },
+          { genericName: { $regex: search, $options: 'i' } },
+          { manufacturer: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
+    const total = await Pharmacy.countDocuments(filter);
+    const medicines = await Pharmacy.find(filter)
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    res.status(200).json(getPaginationResponse(medicines, total, page, limit));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

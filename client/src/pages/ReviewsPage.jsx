@@ -20,7 +20,7 @@ function ReviewsPage() {
   // Get doctor or staff ID for the logged-in user
   useEffect(() => {
     if (user?.role === 'doctor') {
-      dispatch(getDoctors())
+      dispatch(getDoctors({ all: true }))
     } else if (['nurse', 'receptionist', 'lab_staff', 'pharmacist'].includes(user?.role)) {
       dispatch(getStaff())
     }

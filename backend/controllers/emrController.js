@@ -55,64 +55,69 @@ const addEMR = async (req, res) => {
         path: 'doctorId',
         populate: { path: 'userId', select: 'name email' }
       });
-    // If prescriptions were included in the EMR, create individual Prescription documents
-    try {
-      const Prescription = require('../models/Prescription');
-      if (Array.isArray(emr.prescription) && emr.prescription.length > 0) {
-        const patientId = populatedEMR.patientId?._id || emr.patientId;
-        const doctorId = populatedEMR.doctorId?._id || emr.doctorId;
-        const createOps = emr.prescription
-          .filter(p => p.medicine)
-          .map(p => ({
-            patientId,
-            doctorId,
-            emrId: emr._id,
-            medicine: p.medicine,
-            dosage: p.dosage || '',
-            frequency: p.frequency || '',
-            duration: p.duration || '',
-            instructions: p.instructions || ''
-          }));
-        if (createOps.length > 0) {
-          await Prescription.insertMany(createOps);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to create prescription documents for EMR:', err.message);
-    }
-
     res.status(201).json({ message: 'EMR created successfully', emr: populatedEMR });
   } catch (error) {
-    console.error('Error creating EMR:', error);
-    res.status(500).json({ message: error.message });
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('Error creating EMR:', error);
+    }
+    res.status(500).json({ message: 'Failed to create EMR. Please try again.' });
   }
 };
 
 const getAllEMRs = async (req, res) => {
   try {
-    let emrs;
-    // Patients should only see their own EMRs
+    const { search, fromDate, toDate } = req.query;
+    const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
+    const { page, limit, skip } = getPaginationParams(req.query);
+
+    let filter = {};
+
+    // Role-based filtering
     if (req.user.role === 'patient') {
       const patient = await Patient.findOne({ userId: req.user.id });
       if (!patient) return res.status(404).json({ message: 'Patient profile not found' });
-      emrs = await EMR.find({ patientId: patient._id });
+      filter.patientId = patient._id;
     } else if (req.user.role === 'doctor') {
-      // Doctors should only see EMRs they authored / assigned to them
       const doctor = await Doctor.findOne({ userId: req.user.id });
       if (!doctor) return res.status(404).json({ message: 'Doctor profile not found' });
-      emrs = await EMR.find({ doctorId: doctor._id });
-    } else if (req.user.role === 'admin' || req.user.role === 'nurse' || req.user.role === 'pharmacist' || req.user.role === 'lab_staff') {
-      // Admin and certain staff roles can view all EMRs
-      emrs = await EMR.find();
-    } else {
+      filter.doctorId = doctor._id;
+    } else if (!['admin', 'nurse', 'pharmacist', 'lab_staff'].includes(req.user.role)) {
       return res.status(403).json({ message: 'Not authorized to view EMRs' });
     }
 
-    const populated = await EMR.populate(emrs, [
-      { path: 'patientId', populate: { path: 'userId', select: 'name email' } },
-      { path: 'doctorId', populate: { path: 'userId', select: 'name email' } }
-    ]);
-    res.status(200).json(populated);
+    // Date range filtering
+    if (fromDate || toDate) {
+      filter.createdAt = {};
+      if (fromDate) filter.createdAt.$gte = new Date(fromDate);
+      if (toDate) {
+        const end = new Date(toDate);
+        end.setDate(end.getDate() + 1);
+        filter.createdAt.$lt = end;
+      }
+    }
+
+    // Search filtering
+    if (search) {
+      filter = {
+        ...filter,
+        $or: [
+          { 'patientId.userId.name': { $regex: search, $options: 'i' } },
+          { diagnosis: { $regex: search, $options: 'i' } },
+          { treatment: { $regex: search, $options: 'i' } },
+          { notes: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
+    const total = await EMR.countDocuments(filter);
+    const emrs = await EMR.find(filter)
+      .populate({ path: 'patientId', populate: { path: 'userId', select: 'name email' } })
+      .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name email' } })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.status(200).json(getPaginationResponse(emrs, total, page, limit));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

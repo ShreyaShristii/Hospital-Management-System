@@ -31,7 +31,6 @@ const createOrder = async (req, res) => {
       amount: order.amount,
       currency: order.currency,
       billId,
-      keyId: process.env.RAZORPAY_KEY_ID,
     })
   } catch (error) {
     res.status(500).json({ message: error.message })

@@ -71,8 +71,30 @@ const addPatient = async (req, res) => {
 // Get all patients
 const getAllPatients = async (req, res) => {
   try {
-    const patients = await Patient.find().populate('userId', 'name email phone role');
-    res.status(200).json(patients);
+    const { search } = req.query;
+    const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
+    const { page, limit, skip } = getPaginationParams(req.query);
+
+    let filter = {};
+    if (search) {
+      // Search by patient name, email, or phone
+      filter = {
+        $or: [
+          { 'userId.name': { $regex: search, $options: 'i' } },
+          { 'userId.email': { $regex: search, $options: 'i' } },
+          { contactNumber: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
+    const total = await Patient.countDocuments(filter);
+    const patients = await Patient.find(filter)
+      .populate('userId', 'name email phone role')
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    res.status(200).json(getPaginationResponse(patients, total, page, limit));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

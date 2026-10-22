@@ -19,8 +19,27 @@ const addBed = async (req, res) => {
 
 const getAllBeds = async (req, res) => {
   try {
-    const beds = await Bed.find().populate('patientId');
-    res.status(200).json(beds);
+    const { search, status } = req.query;
+    const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
+    const { page, limit, skip } = getPaginationParams(req.query);
+
+    let filter = {};
+    if (status) filter.status = status;
+    if (search) {
+      filter = {
+        ...filter,
+        bedNumber: { $regex: search, $options: 'i' },
+      };
+    }
+
+    const total = await Bed.countDocuments(filter);
+    const beds = await Bed.find(filter)
+      .populate('patientId')
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    res.status(200).json(getPaginationResponse(beds, total, page, limit));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -13,9 +13,9 @@ function ReceptionistDashboard() {
   const { bills } = useSelector((state) => state.bills)
 
   useEffect(() => {
-    dispatch(getAppointments())
-    dispatch(getPatients())
-    dispatch(getBills())
+    dispatch(getAppointments({ all: true }))
+    dispatch(getPatients({ all: true }))
+    dispatch(getBills({ all: true }))
   }, [dispatch])
 
   const today = new Date().toISOString().split('T')[0]

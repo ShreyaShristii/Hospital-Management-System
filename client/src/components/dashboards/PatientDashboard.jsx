@@ -157,7 +157,7 @@ function PatientDashboard() {
     
     // Fetch current user's patient profile
     dispatch(getMyProfile())
-    dispatch(getLabTests())
+    dispatch(getLabTests({ all: true }))
   }, [dispatch])
 
   const myProfile = patient
@@ -269,7 +269,7 @@ function PatientDashboard() {
                 },
                 {
                   label: 'View Prescriptions',
-                  path: '/prescriptions',
+                  path: '/emr',
                 },
                 {
                   label: 'View My Bills',

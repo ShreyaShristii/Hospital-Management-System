@@ -2,19 +2,53 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const compression = require('compression');
+const mongoSanitize = require('express-mongo-sanitize');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 
 connectDB();
 
 const app = express();
 
-// Dynamic CORS configuration to handle all Vercel deployments
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://localhost:3000',
-  'https://hospital-management-system-sigma-three.vercel.app'
-];
+// Trust proxy - important for rate limiting behind reverse proxies
+app.set('trust proxy', 1);
+
+// Security Middleware
+app.use(helmet());
+app.use(compression());
+app.use(mongoSanitize());
+
+// Rate limiting - prevent brute force attacks
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
+
+// Stricter rate limiting for auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5, // 5 attempts per 15 minutes
+  message: 'Too many login attempts, please try again after 15 minutes.',
+  skipSuccessfulRequests: true,
+});
+
+// CORS configuration - restrict to specific domains only
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? [
+      process.env.PROD_CLIENT_URL || 'https://hospital-management-system-sigma-three.vercel.app'
+    ]
+  : [
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000'
+    ];
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -24,9 +58,6 @@ app.use(cors({
     // Allow if in whitelist
     if (allowedOrigins.includes(origin)) return callback(null, true);
     
-    // Allow all Vercel preview deployments
-    if (origin.includes('.vercel.app')) return callback(null, true);
-    
     // Otherwise, deny
     const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
     return callback(new Error(msg), false);
@@ -34,13 +65,22 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
+// Health check endpoint (no auth needed)
+app.get('/', (req, res) => {
+  res.json({ message: 'HMS API is running...' });
+});
+
+// Apply stricter rate limiting to auth endpoints
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/auth', authRoutes);
 
 const paymentRoutes = require('./routes/paymentRoutes');
 app.use('/api/payments', paymentRoutes);
-
-const authRoutes = require('./routes/authRoutes');
-app.use('/api/auth', authRoutes);
 
 const patientRoutes = require('./routes/patientRoutes');
 app.use('/api/patients', patientRoutes);
@@ -72,8 +112,6 @@ app.use('/api/emrs', emrRoutes);
  const pharmacyRoutes = require('./routes/pharmacyRoutes');
  app.use('/api/pharmacy', pharmacyRoutes);
 
-const prescriptionRoutes = require('./routes/prescriptionRoutes');
-app.use('/api/prescriptions', prescriptionRoutes);
 
  const staffRoutes = require('./routes/staffRoutes');
  app.use('/api/staff', staffRoutes);
@@ -87,12 +125,36 @@ app.use('/api/reviews', reviewRoutes);
 const notificationRoutes = require('./routes/notificationRoutes');
 app.use('/api/notifications', notificationRoutes);
 
-app.get('/', (req, res) => {
-  res.json({ message: 'HMS API is running...' });
+// Error handling middleware
+app.use((err, req, res, next) => {
+  // Don't expose error details in production
+  const statusCode = err.statusCode || 500;
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  
+  res.status(statusCode).json({
+    message: isDevelopment ? err.message : 'An error occurred. Please try again later.',
+    ...(isDevelopment && { stack: err.stack })
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: 'Endpoint not found' });
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+const server = app.listen(PORT, () => {
+  if (process.env.NODE_ENV !== 'production') {
+    console.log(`Server running on port ${PORT}`);
+  }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  server.close(() => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Server terminated');
+    }
+  });
 });
 

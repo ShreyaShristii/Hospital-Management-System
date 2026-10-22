@@ -30,8 +30,8 @@ function EMRForm({ emrToEdit, onClose }) {
   ])
 
   useEffect(() => {
-    dispatch(getPatients())
-    dispatch(getDoctors())
+    dispatch(getPatients({ all: true }))
+    dispatch(getDoctors({ all: true }))
   }, [dispatch])
 
   useEffect(() => {

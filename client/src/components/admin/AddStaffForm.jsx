@@ -25,7 +25,7 @@ function AddStaffForm({ onClose }) {
   })
 
   useEffect(() => {
-    dispatch(getDepartments())
+    dispatch(getDepartments({ all: true }))
   }, [dispatch])
 
   const handleChange = (e) => {
@@ -130,11 +130,12 @@ function AddStaffForm({ onClose }) {
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
       background: 'rgba(0,0,0,0.5)', display: 'flex',
-      justifyContent: 'center', alignItems: 'center', zIndex: 1000
+      justifyContent: 'center', alignItems: 'center', zIndex: 1000,
+      padding: '10px'
     }}>
       <div style={{
         background: 'white', padding: '30px', borderRadius: '8px',
-        width: '540px', maxHeight: '90vh', overflowY: 'auto'
+        width: '100%', maxWidth: '540px', maxHeight: '90vh', overflowY: 'auto'
       }}>
         <h3 style={{ color: '#2c3e50', marginBottom: '20px' }}>Add Staff Member</h3>
 

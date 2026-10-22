@@ -6,9 +6,14 @@ const API = API_BASE
 const getToken = () => localStorage.getItem('token')
 const config = () => ({ headers: { Authorization: `Bearer ${getToken()}` } })
 
-export const getBeds = createAsyncThunk('beds/getAll', async (_, thunkAPI) => {
+export const getBeds = createAsyncThunk('beds/getAll', async (params = {}, thunkAPI) => {
   try {
-    const res = await axios.get(`${API}/beds`, config())
+    const queryParams = new URLSearchParams({
+      page: params.page || 1,
+      limit: params.limit || 10,
+      search: params.search || '',
+    }).toString()
+    const res = await axios.get(`${API}/beds?${queryParams}`, config())
     return res.data
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data?.message || 'Failed to fetch beds')
@@ -58,6 +63,10 @@ const bedSlice = createSlice({
     availableBeds: [],
     isLoading: false,
     error: null,
+    total: 0,
+    page: 1,
+    pages: 1,
+    pageSize: 10,
   },
   reducers: {
     clearBedError: (state) => { state.error = null }
@@ -67,7 +76,11 @@ const bedSlice = createSlice({
       .addCase(getBeds.pending, (state) => { state.isLoading = true; state.error = null })
       .addCase(getBeds.fulfilled, (state, action) => {
         state.isLoading = false
-        state.beds = action.payload
+        state.beds = action.payload.data || action.payload
+        state.total = action.payload.total || 0
+        state.page = action.payload.page || 1
+        state.pages = action.payload.pages || 1
+        state.pageSize = action.payload.pageSize || 10
       })
       .addCase(getBeds.rejected, (state, action) => {
         state.isLoading = false

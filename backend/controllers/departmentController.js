@@ -28,8 +28,28 @@ const addDepartment = async (req, res) => {
 
 const getAllDepartments = async (req, res) => {
   try {
-    const departments = await populateDepartment(Department.find())
-    res.status(200).json(departments);
+    const { search } = req.query;
+    const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
+    const { page, limit, skip } = getPaginationParams(req.query);
+
+    let filter = {};
+    if (search) {
+      filter = {
+        $or: [
+          { departmentName: { $regex: search, $options: 'i' } },
+          { departmentHead: { $regex: search, $options: 'i' } },
+        ],
+      };
+    }
+
+    const total = await Department.countDocuments(filter);
+    const departments = await populateDepartment(
+      Department.find(filter)
+        .skip(skip)
+        .limit(limit)
+    );
+
+    res.status(200).json(getPaginationResponse(departments, total, page, limit));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
