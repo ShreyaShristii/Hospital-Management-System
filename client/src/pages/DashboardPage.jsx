@@ -27,7 +27,7 @@ function DashboardPage() {
   return (
     <>
       <Navbar />
-      {renderDashboard()}
+      <main id="main-content" tabIndex={-1}>{renderDashboard()}</main>
     </>
   )
 }

@@ -50,22 +50,29 @@ const NotificationBell = () => {
 
   return (
     <div className="notification-bell-container" ref={dropdownRef}>
-      <div className="bell-icon-wrapper" onClick={() => setShowDropdown(!showDropdown)}>
+      <button
+        type="button"
+        className="bell-icon-wrapper"
+        aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+        aria-expanded={showDropdown}
+        aria-haspopup="true"
+        onClick={() => setShowDropdown(!showDropdown)}
+        style={{ background: 'transparent', border: 'none', color: 'inherit', display: 'flex' }}
+      >
         <svg
           className="bell-icon"
           viewBox="0 0 24 24"
           width="20"
           height="20"
-          aria-label="Notifications"
-          role="img"
+          aria-hidden="true"
         >
           <path
             d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-5h-1V10a6 6 0 1 0-12 0v7H5a1 1 0 0 0 0 2h14a1 1 0 1 0 0-2Z"
             fill="currentColor"
           />
         </svg>
-        {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
-      </div>
+        {unreadCount > 0 && <span className="badge" aria-hidden="true">{unreadCount}</span>}
+      </button>
 
       {showDropdown && (
         <div className="notification-dropdown">
@@ -88,6 +95,9 @@ const NotificationBell = () => {
                 <div
                   key={notification._id}
                   className={`notification-item ${!notification.isRead ? 'unread' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNotificationClick(notification) } }}
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="notification-content">
@@ -99,6 +109,7 @@ const NotificationBell = () => {
                   </div>
                   <button
                     className="delete-btn"
+                    aria-label={`Delete notification: ${notification.title}`}
                     onClick={(e) => handleDelete(e, notification._id)}
                   >
                     Delete

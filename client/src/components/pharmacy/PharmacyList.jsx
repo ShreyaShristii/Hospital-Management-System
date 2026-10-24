@@ -5,7 +5,7 @@ import Pagination from '../common/Pagination'
 
 function PharmacyList({ onEdit }) {
   const dispatch = useDispatch()
-  const { medicines, isLoading, total, pages, page: currentPage, pageSize } = useSelector((state) => state.pharmacy)
+  const { medicines, isLoading, total, pages, pageSize } = useSelector((state) => state.pharmacy)
   const { user } = useSelector((state) => state.auth)
 
   const [page, setPage] = useState(1)

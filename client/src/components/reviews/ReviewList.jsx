@@ -5,7 +5,7 @@ import Pagination from '../common/Pagination'
 
 function ReviewList({ onEdit, filterType, filterId }) {
   const dispatch = useDispatch()
-  const { reviews, isLoading, total, pages, page: currentPage, pageSize } = useSelector((state) => state.reviews)
+  const { reviews, isLoading, total, pages, pageSize } = useSelector((state) => state.reviews)
   const { user } = useSelector((state) => state.auth)
 
   const [page, setPage] = useState(1)

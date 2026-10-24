@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
-import Navbar from '../components/Navbar'
+import PageLayout from '../components/common/PageLayout'
 import DepartmentList from '../components/departments/DepartmentList'
 import DepartmentForm from '../components/departments/DepartmentForm'
 
@@ -20,40 +20,16 @@ function DepartmentsPage() {
   }
 
   return (
-    <div>
-      <Navbar />
-      <div style={{ padding: '30px', background: '#f4f6f9', minHeight: '100vh' }}>
-        <div style={{
-          display: 'flex', justifyContent: 'space-between',
-          alignItems: 'center', marginBottom: '24px'
-        }}>
-          <div>
-            <h2 style={{ color: '#2c3e50', marginBottom: '4px' }}>Departments</h2>
-            <p style={{ color: '#7f8c8d', fontSize: '14px' }}>
-              Manage hospital departments and their head doctors
-            </p>
-          </div>
-          {user?.role === 'admin' && (
-            <button onClick={() => setShowForm(true)} style={{
-              padding: '10px 20px', background: '#2c3e50',
-              color: 'white', border: 'none', borderRadius: '4px',
-              cursor: 'pointer', fontWeight: '600'
-            }}>
-              + Add Department
-            </button>
-          )}
-        </div>
-
-        <DepartmentList onEdit={handleEdit} />
-
-        {showForm && (
-          <DepartmentForm
-            departmentToEdit={departmentToEdit}
-            onClose={handleClose}
-          />
-        )}
-      </div>
-    </div>
+    <PageLayout
+      title="Departments"
+      subtitle="Manage hospital departments and their head doctors"
+      actions={user?.role === 'admin' && (
+        <button className="btn btn-primary" onClick={() => setShowForm(true)}>+ Add Department</button>
+      )}
+    >
+      <DepartmentList onEdit={handleEdit} />
+      {showForm && <DepartmentForm departmentToEdit={departmentToEdit} onClose={handleClose} />}
+    </PageLayout>
   )
 }
 

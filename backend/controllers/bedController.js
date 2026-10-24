@@ -1,6 +1,7 @@
+const escapeRegex = require('../utils/escapeRegex');
 const Bed = require('../models/Bed');
 
-const addBed = async (req, res) => {
+const addBed = async (req, res, next) => {
   try {
     const { bedNumber, ward, room } = req.body;
 
@@ -13,11 +14,11 @@ const addBed = async (req, res) => {
     res.status(201).json({ message: 'Bed added successfully', bed });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAllBeds = async (req, res) => {
+const getAllBeds = async (req, res, next) => {
   try {
     const { search, status } = req.query;
     const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
@@ -28,7 +29,7 @@ const getAllBeds = async (req, res) => {
     if (search) {
       filter = {
         ...filter,
-        bedNumber: { $regex: search, $options: 'i' },
+        bedNumber: { $regex: escapeRegex(search), $options: 'i' },
       };
     }
 
@@ -41,20 +42,20 @@ const getAllBeds = async (req, res) => {
 
     res.status(200).json(getPaginationResponse(beds, total, page, limit));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAvailableBeds = async (req, res) => {
+const getAvailableBeds = async (req, res, next) => {
   try {
     const beds = await Bed.find({ status: 'Available' });
     res.status(200).json(beds);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const updateBed = async (req, res) => {
+const updateBed = async (req, res, next) => {
   try {
     const bed = await Bed.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!bed) {
@@ -62,11 +63,11 @@ const updateBed = async (req, res) => {
     }
     res.status(200).json({ message: 'Bed updated successfully', bed });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const deleteBed = async (req, res) => {
+const deleteBed = async (req, res, next) => {
   try {
     const bed = await Bed.findByIdAndDelete(req.params.id);
     if (!bed) {
@@ -74,7 +75,7 @@ const deleteBed = async (req, res) => {
     }
     res.status(200).json({ message: 'Bed deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

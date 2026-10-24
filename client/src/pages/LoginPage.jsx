@@ -15,6 +15,7 @@ function LoginPage() {
     email: '',
     password: '',
   })
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleChange = (e) => {
     setFormData({
@@ -52,7 +53,7 @@ function LoginPage() {
           </p>
 
           {error && (
-            <div className="login-error">
+            <div className="login-error" id="login-error" role="alert">
               {error}
             </div>
           )}
@@ -60,14 +61,19 @@ function LoginPage() {
           <form onSubmit={handleSubmit}>
 
             <div className="login-field">
-              <label className="login-label">
+              <label className="login-label" htmlFor="login-email">
                 Email Address
               </label>
 
               <input
+                id="login-email"
                 className="login-input"
                 type="email"
                 name="email"
+                autoComplete="username"
+                autoFocus
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? 'login-error' : undefined}
                 value={formData.email}
                 onChange={handleChange}
                 placeholder="you@hospital.com"
@@ -76,19 +82,38 @@ function LoginPage() {
             </div>
 
             <div className="login-field">
-              <label className="login-label">
+              <label className="login-label" htmlFor="login-password">
                 Password
               </label>
 
-              <input
-                className="login-input"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                required
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  id="login-password"
+                  className="login-input"
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  autoComplete="current-password"
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? 'login-error' : undefined}
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter your password"
+                  style={{ paddingRight: '64px' }}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((s) => !s)}
+                  aria-pressed={showPassword}
+                  style={{
+                    position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                    background: 'transparent', border: 'none', color: '#1a4f7a',
+                    fontSize: 13, fontWeight: 600, padding: '4px 8px',
+                  }}
+                >
+                  {showPassword ? 'Hide' : 'Show'}
+                </button>
+              </div>
             </div>
 
             <button

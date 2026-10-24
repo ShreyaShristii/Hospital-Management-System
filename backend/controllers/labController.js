@@ -1,3 +1,4 @@
+const escapeRegex = require('../utils/escapeRegex');
 const Lab = require('../models/Lab');
 const Doctor = require('../models/Doctor');
 const Patient = require('../models/Patient');
@@ -7,7 +8,7 @@ const populateLab = (query) => query
   .populate({ path: 'patientId', populate: { path: 'userId', select: 'name' } })
   .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name specialization' } })
 
-const orderLabTest = async (req, res) => {
+const orderLabTest = async (req, res, next) => {
   try {
     const { patientId, doctorId, testName } = req.body;
 
@@ -16,11 +17,11 @@ const orderLabTest = async (req, res) => {
 
     res.status(201).json({ message: 'Lab test ordered successfully', lab: populated });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAllLabTests = async (req, res) => {
+const getAllLabTests = async (req, res, next) => {
   try {
     const { role, id: userId } = req.user;
     const { search, status } = req.query;
@@ -48,8 +49,8 @@ const getAllLabTests = async (req, res) => {
       filter = {
         ...filter,
         $or: [
-          { 'patientId.userId.name': { $regex: search, $options: 'i' } },
-          { testType: { $regex: search, $options: 'i' } },
+          { 'patientId.userId.name': { $regex: escapeRegex(search), $options: 'i' } },
+          { testType: { $regex: escapeRegex(search), $options: 'i' } },
         ],
       };
     }
@@ -64,38 +65,53 @@ const getAllLabTests = async (req, res) => {
 
     res.status(200).json(getPaginationResponse(labs, total, page, limit));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getLabTestById = async (req, res) => {
+const getLabTestById = async (req, res, next) => {
   try {
     const lab = await populateLab(Lab.findById(req.params.id))
     if (!lab) return res.status(404).json({ message: 'Lab test not found' });
+    if (req.user.role === 'patient') {
+      const me = await Patient.findOne({ userId: req.user.id }).select('_id').lean();
+      if (!me || String(lab.patientId?._id || lab.patientId) !== String(me._id)) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
     res.status(200).json(lab);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getLabTestsByPatient = async (req, res) => {
+const getLabTestsByPatient = async (req, res, next) => {
   try {
+    if (req.user.role === 'patient') {
+      const me = await Patient.findOne({ userId: req.user.id }).select('_id').lean();
+      if (!me || String(me._id) !== req.params.patientId) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+    }
     const labs = await populateLab(
       Lab.find({ patientId: req.params.patientId }).sort({ requestedDate: -1 })
     )
     res.status(200).json(labs);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const updateLabTest = async (req, res) => {
+const updateLabTest = async (req, res, next) => {
   try {
     const existing = await Lab.findById(req.params.id);
     if (!existing) return res.status(404).json({ message: 'Lab test not found' });
 
+    const updates = Object.fromEntries(
+      Object.entries(req.body).filter(([k]) => !['patientId', '_id', 'requestedDate'].includes(k))
+    );
     const lab = await populateLab(
-      Lab.findByIdAndUpdate(req.params.id, req.body, { new: true })
+      Lab.findByIdAndUpdate(req.params.id, { $set: updates }, { new: true, runValidators: true })
     )
 
     // Notify patient when lab test is completed
@@ -124,17 +140,17 @@ const updateLabTest = async (req, res) => {
 
     res.status(200).json({ message: 'Lab test updated successfully', lab });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const deleteLabTest = async (req, res) => {
+const deleteLabTest = async (req, res, next) => {
   try {
     const lab = await Lab.findByIdAndDelete(req.params.id);
     if (!lab) return res.status(404).json({ message: 'Lab test not found' });
     res.status(200).json({ message: 'Lab test deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

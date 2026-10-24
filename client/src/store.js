@@ -16,6 +16,16 @@ import notificationReducer from './features/notifications/notificationSlice'
 
 
 const store = configureStore({
+  devTools: import.meta.env.DEV ? {
+    actionSanitizer: (action) => {
+      if (!action.type.startsWith('auth/') || !action.meta?.arg) return action
+      const arg = { ...action.meta.arg }
+      for (const field of ['password', 'currentPassword', 'newPassword']) {
+        if (field in arg) arg[field] = '[REDACTED]'
+      }
+      return { ...action, meta: { ...action.meta, arg } }
+    },
+  } : false,
   reducer: {
     auth: authReducer,
     patients: patientReducer,

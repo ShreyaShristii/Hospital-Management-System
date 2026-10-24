@@ -5,7 +5,7 @@ import Pagination from '../common/Pagination'
 
 function BedList({ onEdit }) {
   const dispatch = useDispatch()
-  const { beds, isLoading, total, pages, page: currentPage, pageSize } = useSelector((state) => state.beds)
+  const { beds, isLoading, total, pages, pageSize } = useSelector((state) => state.beds)
   const { user } = useSelector((state) => state.auth)
 
   const [page, setPage] = useState(1)

@@ -1,6 +1,10 @@
 const Appointment = require('../models/Appointment');
 const Patient = require('../models/Patient');
 const Doctor = require('../models/Doctor');
+const User = require('../models/User');
+const escapeRegex = require('../utils/escapeRegex');
+
+const APPOINTMENT_FIELDS = ['doctorId', 'appointmentDate', 'appointmentTime', 'reason', 'status'];
 const createNotification = require('../utils/notificationHelper')
 
 const ensurePatientProfile = async (userId) => {
@@ -22,7 +26,7 @@ const ensurePatientProfile = async (userId) => {
   return patient;
 };
 
-const addAppointment = async (req, res) => {
+const addAppointment = async (req, res, next) => {
   try {
     const { patientId, doctorId, appointmentDate, appointmentTime, reason } = req.body;
     const { role, id: userId } = req.user;
@@ -35,6 +39,9 @@ const addAppointment = async (req, res) => {
 
     if (!resolvedPatientId || !doctorId || !appointmentDate || !appointmentTime) {
       return res.status(400).json({ message: 'Missing required fields' });
+    }
+    if (!(await Doctor.exists({ _id: doctorId }))) {
+      return res.status(404).json({ message: 'Doctor not found' });
     }
 
     const appointment = await Appointment.create({
@@ -73,11 +80,11 @@ const addAppointment = async (req, res) => {
 
     res.status(201).json({ message: 'Appointment booked successfully', appointment: populated });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAllAppointments = async (req, res) => {
+const getAllAppointments = async (req, res, next) => {
   try {
     const { role, id: userId } = req.user;
     const {
@@ -113,6 +120,23 @@ const getAllAppointments = async (req, res) => {
       filter.appointmentDate = { $gte: start, $lt: end };
     }
 
+    if (search) {
+      // Resolve names to ids first so filtering happens before pagination.
+      const rx = { $regex: escapeRegex(search), $options: 'i' };
+      const users = await User.find({ name: rx }).select('_id').lean();
+      const userIds = users.map((u) => u._id);
+      const [patients, doctors] = await Promise.all([
+        Patient.find({ userId: { $in: userIds } }).select('_id').lean(),
+        Doctor.find({ $or: [{ userId: { $in: userIds } }, { specialization: rx }] }).select('_id').lean(),
+      ]);
+      const clauses = [
+        { reason: rx },
+        { patientId: { $in: patients.map((p) => p._id) } },
+        { doctorId: { $in: doctors.map((d) => d._id) } },
+      ];
+      filter = { $and: [filter, { $or: clauses }] };
+    }
+
     const fetchAll = all === 'true';
     const sortOrder = order === 'asc' ? 1 : -1;
     const skip = fetchAll ? 0 : (parseInt(page) - 1) * parseInt(limit);
@@ -127,18 +151,7 @@ const getAllAppointments = async (req, res) => {
       query = query.skip(skip).limit(parseInt(limit));
     }
 
-    let appointments = await query;
-
-    // Post-populate search (by name, doctor, specialization, reason)
-    if (search) {
-      const s = search.toLowerCase();
-      appointments = appointments.filter(apt =>
-        apt.patientId?.userId?.name?.toLowerCase().includes(s) ||
-        apt.doctorId?.userId?.name?.toLowerCase().includes(s) ||
-        apt.doctorId?.specialization?.toLowerCase().includes(s) ||
-        apt.reason?.toLowerCase().includes(s)
-      );
-    }
+    const appointments = await query;
 
     res.status(200).json({
       appointments,
@@ -147,11 +160,11 @@ const getAllAppointments = async (req, res) => {
       pages: fetchAll ? 1 : Math.ceil(total / parseInt(limit)),
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAppointmentById = async (req, res) => {
+const getAppointmentById = async (req, res, next) => {
   try {
     const { role, id: userId } = req.user;
 
@@ -175,11 +188,11 @@ const getAppointmentById = async (req, res) => {
 
     res.status(200).json(appointment);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const updateAppointment = async (req, res) => {
+const updateAppointment = async (req, res, next) => {
   try {
     const { role, id: userId } = req.user;
 
@@ -196,8 +209,11 @@ const updateAppointment = async (req, res) => {
       const doctor = await Doctor.findOne({ userId });
       if (!doctor || existing.doctorId.toString() !== doctor._id.toString())
         return res.status(403).json({ message: 'Access denied' });
-      // Doctor can ONLY update status — strip everything else
+      // Doctor can ONLY update status
       req.body = { status: req.body.status };
+    } else {
+      const allowed = role === 'patient' ? APPOINTMENT_FIELDS : [...APPOINTMENT_FIELDS, 'patientId'];
+      req.body = Object.fromEntries(Object.entries(req.body).filter(([k]) => allowed.includes(k)));
     }
 
     const appointment = await Appointment.findByIdAndUpdate(
@@ -234,11 +250,11 @@ const updateAppointment = async (req, res) => {
 
     res.status(200).json({ message: 'Appointment updated successfully', appointment });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const deleteAppointment = async (req, res) => {
+const deleteAppointment = async (req, res, next) => {
   try {
     const { role, id: userId } = req.user;
 
@@ -257,7 +273,7 @@ const deleteAppointment = async (req, res) => {
     await Appointment.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Appointment deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

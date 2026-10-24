@@ -4,7 +4,6 @@ import { useNavigate, Link } from 'react-router-dom'
 import { registerUser, loginUser } from '../features/auth/authSlice'
 
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap');
 
   .register-root {
     min-height: 100vh;

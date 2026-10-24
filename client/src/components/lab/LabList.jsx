@@ -5,7 +5,7 @@ import Pagination from '../common/Pagination'
 
 function LabList({ onEdit }) {
   const dispatch = useDispatch()
-  const { labs, isLoading, total, pages, page: currentPage, pageSize } = useSelector((state) => state.lab)
+  const { labs, isLoading, total, pages, pageSize } = useSelector((state) => state.lab)
   const { user } = useSelector((state) => state.auth)
 
   const [page, setPage] = useState(1)

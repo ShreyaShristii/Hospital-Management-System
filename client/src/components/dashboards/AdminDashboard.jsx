@@ -9,7 +9,6 @@ import { getBills } from '../../features/bills/billSlice'
 import { getStaff } from '../../features/staff/staffSlice'
 
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap');
 
   .admin-dashboard {
     min-height: 100vh;

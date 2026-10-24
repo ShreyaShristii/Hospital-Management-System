@@ -4,6 +4,23 @@ import { API_BASE } from '../../utils/apiBase'
 
 const API = API_BASE
 
+const getAuthError = (err) => {
+  const response = err.response
+  const firstDetail = response?.data?.details?.[0]?.message
+  if (typeof firstDetail === 'string') return firstDetail
+  if (typeof response?.data?.message === 'string') return response.data.message
+  if (response?.status === 429) {
+    return 'Too many attempts. Please try again after 15 minutes.'
+  }
+  if (err.code === 'ECONNABORTED') {
+    return 'The server took too long to respond. Please try again.'
+  }
+  if (!response) {
+    return 'Unable to reach the server. Check your connection and that the API server is running.'
+  }
+  return 'The request failed. Please try again.'
+}
+
 // Decode token to restore user on page refresh
 const getUserFromToken = () => {
   try {
@@ -18,20 +35,20 @@ const getUserFromToken = () => {
 
 export const loginUser = createAsyncThunk('auth/login', async (formData, thunkAPI) => {
   try {
-    const res = await axios.post(`${API}/auth/login`, formData)
+    const res = await axios.post(`${API}/auth/login`, formData, { timeout: 30000 })
     localStorage.setItem('token', res.data.token)
     return res.data
   } catch (err) {
-    return thunkAPI.rejectWithValue(err.response.data.message)
+    return thunkAPI.rejectWithValue(getAuthError(err))
   }
 })
 
 export const registerUser = createAsyncThunk('auth/register', async (formData, thunkAPI) => {
   try {
-    const res = await axios.post(`${API}/auth/register`, formData)
+    const res = await axios.post(`${API}/auth/register`, formData, { timeout: 30000 })
     return res.data
   } catch (err) {
-    return thunkAPI.rejectWithValue(err.response.data.message)
+    return thunkAPI.rejectWithValue(getAuthError(err))
   }
 })
 
@@ -43,11 +60,11 @@ export const updateUserProfile = createAsyncThunk('auth/updateProfile', async (f
     })
     return res.data
   } catch (err) {
-    return thunkAPI.rejectWithValue(err.response.data.message)
+    return thunkAPI.rejectWithValue(getAuthError(err))
   }
 })
 
-export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async (_, thunkAPI) => {
+export const fetchCurrentUser = createAsyncThunk('auth/fetchCurrentUser', async () => {
   try {
     const token = localStorage.getItem('token')
     if (!token) return null

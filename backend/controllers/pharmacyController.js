@@ -1,6 +1,7 @@
+const escapeRegex = require('../utils/escapeRegex');
 const Pharmacy = require('../models/Pharmacy');
 
-const addMedicine = async (req, res) => {
+const addMedicine = async (req, res, next) => {
   try {
     const { medicineName, category, manufacturer, stock, price, lowStockAlert, expiryDate } = req.body;
 
@@ -15,11 +16,11 @@ const addMedicine = async (req, res) => {
 
     res.status(201).json({ message: 'Medicine added successfully', medicine });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAllMedicines = async (req, res) => {
+const getAllMedicines = async (req, res, next) => {
   try {
     const { search } = req.query;
     const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
@@ -29,9 +30,9 @@ const getAllMedicines = async (req, res) => {
     if (search) {
       filter = {
         $or: [
-          { medicineName: { $regex: search, $options: 'i' } },
-          { genericName: { $regex: search, $options: 'i' } },
-          { manufacturer: { $regex: search, $options: 'i' } },
+          { medicineName: { $regex: escapeRegex(search), $options: 'i' } },
+          { genericName: { $regex: escapeRegex(search), $options: 'i' } },
+          { manufacturer: { $regex: escapeRegex(search), $options: 'i' } },
         ],
       };
     }
@@ -44,11 +45,11 @@ const getAllMedicines = async (req, res) => {
 
     res.status(200).json(getPaginationResponse(medicines, total, page, limit));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getMedicineById = async (req, res) => {
+const getMedicineById = async (req, res, next) => {
   try {
     const medicine = await Pharmacy.findById(req.params.id);
     if (!medicine) {
@@ -56,22 +57,22 @@ const getMedicineById = async (req, res) => {
     }
     res.status(200).json(medicine);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getLowStockMedicines = async (req, res) => {
+const getLowStockMedicines = async (req, res, next) => {
   try {
     const medicines = await Pharmacy.find({
       $expr: { $lte: ['$stock', '$lowStockAlert'] }
     });
     res.status(200).json(medicines);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const updateMedicine = async (req, res) => {
+const updateMedicine = async (req, res, next) => {
   try {
     const medicine = await Pharmacy.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!medicine) {
@@ -79,11 +80,11 @@ const updateMedicine = async (req, res) => {
     }
     res.status(200).json({ message: 'Medicine updated successfully', medicine });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const deleteMedicine = async (req, res) => {
+const deleteMedicine = async (req, res, next) => {
   try {
     const medicine = await Pharmacy.findByIdAndDelete(req.params.id);
     if (!medicine) {
@@ -91,7 +92,7 @@ const deleteMedicine = async (req, res) => {
     }
     res.status(200).json({ message: 'Medicine deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

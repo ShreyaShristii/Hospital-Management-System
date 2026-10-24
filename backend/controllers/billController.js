@@ -1,15 +1,23 @@
+const escapeRegex = require('../utils/escapeRegex');
 const Bill = require('../models/Bill');
 const Patient = require('../models/Patient');
 const Doctor = require('../models/Doctor');
 const createNotification = require('../utils/notificationHelper')
+const User = require('../models/User');
+
+const BILL_EDITABLE_FIELDS = ['items', 'amount', 'paymentMode', 'paymentStatus', 'paymentDate'];
 
 const populateBill = (query) => query
   .populate({ path: 'patientId', populate: { path: 'userId', select: 'name email' } })
   .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name' }, select: 'userId specialization' })
 
-const addBill = async (req, res) => {
+const addBill = async (req, res, next) => {
   try {
-    const { patientId, doctorId, items, amount, paymentMode, paymentStatus, paymentDate } = req.body;
+    const { patientId, doctorId, items, paymentMode, paymentStatus, paymentDate } = req.body;
+    // Total is derived from line items so client-supplied amounts can't disagree.
+    const amount = Array.isArray(items) && items.length
+      ? items.reduce((sum, i) => sum + Number(i.amount || 0), 0)
+      : req.body.amount;
 
     const bill = await Bill.create({
       patientId, doctorId, items, amount, paymentMode, paymentStatus, paymentDate
@@ -40,11 +48,11 @@ const addBill = async (req, res) => {
     const populated = await populateBill(Bill.findById(bill._id))
     res.status(201).json({ message: 'Bill created successfully', bill: populated });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAllBills = async (req, res) => {
+const getAllBills = async (req, res, next) => {
   try {
     const { role, id: userId } = req.user;
     const { search, status } = req.query;
@@ -68,11 +76,14 @@ const getAllBills = async (req, res) => {
     if (status) filter.paymentStatus = status;
 
     if (search) {
+      const rx = { $regex: escapeRegex(search), $options: 'i' };
+      const users = await User.find({ name: rx }).select('_id').lean();
+      const patients = await Patient.find({ userId: { $in: users.map((u) => u._id) } }).select('_id').lean();
       filter = {
         ...filter,
         $or: [
-          { 'patientId.userId.name': { $regex: search, $options: 'i' } },
-          { items: { $regex: search, $options: 'i' } },
+          { patientId: { $in: patients.map((p) => p._id) } },
+          { 'items.name': rx },
         ],
       };
     }
@@ -87,11 +98,11 @@ const getAllBills = async (req, res) => {
 
     res.status(200).json(getPaginationResponse(bills, total, page, limit));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getBillById = async (req, res) => {
+const getBillById = async (req, res, next) => {
   try {
     const { role, id: userId } = req.user;
 
@@ -116,29 +127,35 @@ const getBillById = async (req, res) => {
 
     res.status(200).json(bill);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const updateBill = async (req, res) => {
+const updateBill = async (req, res, next) => {
   try {
+    const updates = Object.fromEntries(
+      Object.entries(req.body).filter(([k]) => BILL_EDITABLE_FIELDS.includes(k))
+    );
+    if (Array.isArray(updates.items) && updates.items.length) {
+      updates.amount = updates.items.reduce((sum, i) => sum + Number(i.amount || 0), 0);
+    }
     const bill = await populateBill(
-      Bill.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after', runValidators: true })
+      Bill.findByIdAndUpdate(req.params.id, { $set: updates }, { returnDocument: 'after', runValidators: true })
     )
     if (!bill) return res.status(404).json({ message: 'Bill not found' });
     res.status(200).json({ message: 'Bill updated successfully', bill });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const deleteBill = async (req, res) => {
+const deleteBill = async (req, res, next) => {
   try {
     const bill = await Bill.findByIdAndDelete(req.params.id);
     if (!bill) return res.status(404).json({ message: 'Bill not found' });
     res.status(200).json({ message: 'Bill deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

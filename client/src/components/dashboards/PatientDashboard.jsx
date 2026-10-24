@@ -6,7 +6,6 @@ import { getLabTests } from '../../features/lab/labSlice'
 import { fetchCurrentUser } from '../../features/auth/authSlice'
 
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap');
 
   .patient-dashboard {
     min-height: 100vh;

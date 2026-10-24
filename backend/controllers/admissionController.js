@@ -1,3 +1,4 @@
+const escapeRegex = require('../utils/escapeRegex');
 const Admission = require('../models/Admission');
 const Bed = require('../models/Bed');
 const Patient = require('../models/Patient');
@@ -8,7 +9,7 @@ const populateAdmission = (query) => query
   .populate({ path: 'doctorId', populate: { path: 'userId', select: 'name specialization' } })
   .populate('bedId', 'bedNumber ward room')
 
-const admitPatient = async (req, res) => {
+const admitPatient = async (req, res, next) => {
   try {
     const { patientId, doctorId, bedId, reason } = req.body;
 
@@ -46,11 +47,11 @@ const admitPatient = async (req, res) => {
     const populated = await populateAdmission(Admission.findById(admission._id))
     res.status(201).json({ message: 'Patient admitted successfully', admission: populated });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const dischargePatient = async (req, res) => {
+const dischargePatient = async (req, res, next) => {
   try {
     const existing = await Admission.findById(req.params.id);
     if (!existing) return res.status(404).json({ message: 'Admission not found' });
@@ -88,11 +89,11 @@ const dischargePatient = async (req, res) => {
     const populated = await populateAdmission(Admission.findById(admission._id))
     res.status(200).json({ message: 'Patient discharged successfully', admission: populated });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAllAdmissions = async (req, res) => {
+const getAllAdmissions = async (req, res, next) => {
   try {
     const { search, status } = req.query;
     const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
@@ -104,8 +105,8 @@ const getAllAdmissions = async (req, res) => {
       filter = {
         ...filter,
         $or: [
-          { 'patientId.userId.name': { $regex: search, $options: 'i' } },
-          { 'bedId.bedNumber': { $regex: search, $options: 'i' } },
+          { 'patientId.userId.name': { $regex: escapeRegex(search), $options: 'i' } },
+          { 'bedId.bedNumber': { $regex: escapeRegex(search), $options: 'i' } },
         ],
       };
     }
@@ -120,17 +121,17 @@ const getAllAdmissions = async (req, res) => {
 
     res.status(200).json(getPaginationResponse(admissions, total, page, limit));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAdmissionById = async (req, res) => {
+const getAdmissionById = async (req, res, next) => {
   try {
     const admission = await populateAdmission(Admission.findById(req.params.id))
     if (!admission) return res.status(404).json({ message: 'Admission not found' });
     res.status(200).json(admission);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

@@ -5,7 +5,7 @@ import Pagination from '../common/Pagination'
 
 function AdmissionList({ onEdit }) {
   const dispatch = useDispatch()
-  const { admissions, isLoading, total, pages, page: currentPage, pageSize } = useSelector((state) => state.admissions)
+  const { admissions, isLoading, total, pages, pageSize } = useSelector((state) => state.admissions)
   const { user } = useSelector((state) => state.auth)
 
   const [page, setPage] = useState(1)

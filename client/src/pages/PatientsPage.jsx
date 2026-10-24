@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Navbar from '../components/Navbar'
+import PageLayout from '../components/common/PageLayout'
 import PatientList from '../components/patients/PatientList'
 import PatientForm from '../components/patients/PatientForm'
 
@@ -18,38 +18,16 @@ function PatientsPage() {
   }
 
   return (
-    <div>
-      <Navbar />
-      <div style={{ padding: '30px' }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px'
-        }}>
-          <h2 style={{ color: '#2c3e50' }}>Patients</h2>
-          <button
-            onClick={() => setShowForm(true)}
-            style={{
-              padding: '10px 20px',
-              background: '#2c3e50',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}>
-            + Add Patient
-          </button>
-        </div>
+    <PageLayout
+      title="Patients"
+      subtitle="Search, register and update patient records"
+      actions={<button className="btn btn-primary" onClick={() => setShowForm(true)}>+ Add Patient</button>}
+    >
+      <div className="surface">
         <PatientList onEdit={handleEdit} />
-        {showForm && (
-          <PatientForm
-            patientToEdit={patientToEdit}
-            onClose={handleClose}
-          />
-        )}
       </div>
-    </div>
+      {showForm && <PatientForm patientToEdit={patientToEdit} onClose={handleClose} />}
+    </PageLayout>
   )
 }
 

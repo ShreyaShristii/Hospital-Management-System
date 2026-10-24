@@ -76,7 +76,6 @@ export const STATUS_COLORS = {
   // Lab
   requested: '#e67e22',
   'in-progress': '#2980b9',
-  completed: '#27ae60',
   
   // Medicine
   'in-stock': '#27ae60',

@@ -7,7 +7,7 @@ import { getPatients } from '../features/patients/patientSlice'
 function PatientProfilePage() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const { patients, isLoading } = useSelector((state) => state.patients)
+  const { patients } = useSelector((state) => state.patients)
   const { user } = useSelector((state) => state.auth)
 
   useEffect(() => {

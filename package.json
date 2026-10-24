@@ -2,15 +2,11 @@
   "name": "hms",
   "version": "1.0.0",
   "description": "Hospital Management System",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "lint": "echo 'Linting...'",
-    "test": "cucumber-js"
-  },
-  "devDependencies": {
-    "@cucumber/cucumber": "^13.0.0",
-    "@playwright/test": "^1.61.1",
-    "cucumber": "^6.0.7",
-    "cucumber-js": "^1.0.0"
+    "lint": "npm --prefix client run lint",
+    "test": "npm --prefix backend test && npm --prefix client test",
+    "test:e2e": "npm --prefix client run test:bdd",
+    "build": "npm --prefix client run build"
   }
 }

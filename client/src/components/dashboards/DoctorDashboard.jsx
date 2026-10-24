@@ -6,7 +6,6 @@ import { getAppointments } from '../../features/appointments/appointmentSlice'
 import { getPatients } from '../../features/patients/patientSlice'
 
 const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap');
 
   .doctor-dashboard {
     min-height: 100vh;

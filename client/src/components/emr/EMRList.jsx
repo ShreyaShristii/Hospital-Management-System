@@ -5,7 +5,7 @@ import Pagination from '../common/Pagination'
 
 function EMRList({ onEdit, onView }) {
   const dispatch = useDispatch()
-  const { emrs, isLoading, total, pages, page: currentPage, pageSize } = useSelector((state) => state.emr)
+  const { emrs, isLoading, total, pages, pageSize } = useSelector((state) => state.emr)
   const { user } = useSelector((state) => state.auth)
 
   const [search, setSearch] = useState('')

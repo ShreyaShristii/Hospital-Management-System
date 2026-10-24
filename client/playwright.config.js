@@ -8,7 +8,7 @@ const testDir = defineBddConfig({
 });
 
 export default defineConfig({
-  testDir: '.features-gen',     
+  testDir,
   use: {
     baseURL: 'http://localhost:5173',
     headless: false,

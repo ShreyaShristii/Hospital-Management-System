@@ -1,9 +1,10 @@
+const escapeRegex = require('../utils/escapeRegex');
 const Department = require('../models/Department');
 
 const populateDepartment = (query) => query
   .populate({ path: 'headDoctorId', populate: { path: 'userId', select: 'name' } })
 
-const addDepartment = async (req, res) => {
+const addDepartment = async (req, res, next) => {
   try {
     let { name, description, location, totalStaff, headDoctorId } = req.body;
 
@@ -22,11 +23,11 @@ const addDepartment = async (req, res) => {
     const populated = await populateDepartment(Department.findById(department._id))
     res.status(201).json({ message: 'Department created successfully', department: populated });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAllDepartments = async (req, res) => {
+const getAllDepartments = async (req, res, next) => {
   try {
     const { search } = req.query;
     const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
@@ -36,8 +37,8 @@ const getAllDepartments = async (req, res) => {
     if (search) {
       filter = {
         $or: [
-          { departmentName: { $regex: search, $options: 'i' } },
-          { departmentHead: { $regex: search, $options: 'i' } },
+          { departmentName: { $regex: escapeRegex(search), $options: 'i' } },
+          { departmentHead: { $regex: escapeRegex(search), $options: 'i' } },
         ],
       };
     }
@@ -51,21 +52,21 @@ const getAllDepartments = async (req, res) => {
 
     res.status(200).json(getPaginationResponse(departments, total, page, limit));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getDepartmentById = async (req, res) => {
+const getDepartmentById = async (req, res, next) => {
   try {
     const department = await populateDepartment(Department.findById(req.params.id))
     if (!department) return res.status(404).json({ message: 'Department not found' });
     res.status(200).json(department);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const updateDepartment = async (req, res) => {
+const updateDepartment = async (req, res, next) => {
   try {
     let updateData = { ...req.body };
     
@@ -78,17 +79,17 @@ const updateDepartment = async (req, res) => {
     if (!department) return res.status(404).json({ message: 'Department not found' });
     res.status(200).json({ message: 'Department updated successfully', department });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const deleteDepartment = async (req, res) => {
+const deleteDepartment = async (req, res, next) => {
   try {
     const department = await Department.findByIdAndDelete(req.params.id);
     if (!department) return res.status(404).json({ message: 'Department not found' });
     res.status(200).json({ message: 'Department deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

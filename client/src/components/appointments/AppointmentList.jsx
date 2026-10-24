@@ -5,7 +5,7 @@ import Pagination from '../common/Pagination'
 
 function AppointmentList({ onEdit, onView }) {
   const dispatch = useDispatch()
-  const { appointments, isLoading, total, pages, page: currentPage, pageSize } = useSelector((state) => state.appointments)
+  const { appointments, isLoading, total, pages, pageSize } = useSelector((state) => state.appointments)
   const { user } = useSelector((state) => state.auth)
 
   const [search, setSearch] = useState('')

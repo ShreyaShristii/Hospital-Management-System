@@ -1,189 +1,99 @@
 const User = require('../models/User');
 const Patient = require('../models/Patient');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const asyncHandler = require('../utils/asyncHandler');
+const AppError = require('../utils/AppError');
+const { signToken } = require('../services/tokenService');
 
-const registerUser = async (req, res) => {
-  try {
-    const { 
-      name, username, email, password, role, phone,
-      age, gender, bloodGroup, allergies, 
-      address, contactNumber, emergencyContact, 
-      currentHealthStatus 
-    } = req.body;
+const BCRYPT_ROUNDS = 12;
 
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: 'Email already in use' });
-    }
+// Compared against when the user does not exist, so response time doesn't reveal valid emails.
+const DUMMY_HASH = bcrypt.hashSync('not-a-real-password', BCRYPT_ROUNDS);
 
-    const usernameExists = await User.findOne({ username });
-    if (usernameExists) {
-      return res.status(400).json({ message: 'Username already in use' });
-    }
+const publicUser = (user) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  phone: user.phone,
+  role: user.role,
+  username: user.username,
+});
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-   
-    const user = await User.create({
-      name,
-      username,
-      email,
-      password: hashedPassword,
-      role: role || 'patient',
-      phone,
-    });
-
-    // If role is patient, auto create patient profile
-    if (user.role === 'patient') {
-      await Patient.create({
-        userId: user._id,
-        age,
-        gender,
-        bloodGroup,
-        allergies,
-        address,
-        contactNumber,
-        emergencyContact,
-        currentHealthStatus,
-      })
-    }
-
-    res.status(201).json({ 
-      message: 'User registered successfully', 
-      userId: user._id 
-    });
-
-  } catch (error) {
-    if (error?.code === 11000) {
-      const duplicateField = Object.keys(error.keyPattern || {})[0];
-      if (duplicateField === 'email') {
-        return res.status(400).json({ message: 'Email already in use' });
-      }
-      if (duplicateField === 'username') {
-        return res.status(400).json({ message: 'Username already in use' });
-      }
-      return res.status(400).json({ message: 'Duplicate value detected' });
-    }
-
-    if (error?.name === 'ValidationError') {
-      return res.status(400).json({ message: error.message });
-    }
-
-    res.status(500).json({ message: error.message });
-  }
+const createAccount = async (data, role) => {
+  const password = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
+  return User.create({
+    name: data.name,
+    username: data.username,
+    email: data.email,
+    password,
+    role,
+    phone: data.phone,
+  });
 };
 
-const loginUser = async (req, res) => {
+// Public sign-up: the role is never taken from the client.
+const registerUser = asyncHandler(async (req, res) => {
+  const user = await createAccount(req.body, 'patient');
+
   try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid password' });
-    }
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '1d' }
-    );
-
-    res.status(200).json({ 
-      token, 
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        username: user.username
-      }
+    const { age, gender, bloodGroup, allergies, address, contactNumber, emergencyContact, currentHealthStatus } = req.body;
+    await Patient.create({
+      userId: user._id, age, gender, bloodGroup, allergies, address, contactNumber, emergencyContact, currentHealthStatus,
     });
-
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    await User.deleteOne({ _id: user._id });
+    throw err;
   }
-};
 
-const updateUserProfile = async (req, res) => {
-  try {
-    const { name, email, phone, currentPassword, newPassword } = req.body;
-    const userId = req.user.id;
+  res.status(201).json({ success: true, message: 'User registered successfully', userId: user._id });
+});
 
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+// Admin-only provisioning of staff accounts.
+const createStaffAccount = asyncHandler(async (req, res) => {
+  const user = await createAccount(req.body, req.body.role);
+  res.status(201).json({ success: true, message: 'Staff account created', userId: user._id });
+});
 
-    // If updating password, verify current password first
-    if (newPassword) {
-      if (!currentPassword) {
-        return res.status(400).json({ message: 'Current password is required to change password' });
-      }
+const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
 
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ message: 'Current password is incorrect' });
-      }
+  const user = await User.findOne({ email }).select('+password');
+  const isMatch = await bcrypt.compare(password, user ? user.password : DUMMY_HASH);
 
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(newPassword, salt);
-    }
-
-    // Update other fields
-    if (name) user.name = name;
-    if (email) {
-      const emailExists = await User.findOne({ email, _id: { $ne: userId } });
-      if (emailExists) {
-        return res.status(400).json({ message: 'Email already in use' });
-      }
-      user.email = email;
-    }
-    if (phone) user.phone = phone;
-
-    await user.save();
-
-    res.status(200).json({ 
-      message: 'Profile updated successfully', 
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role
-      }
-    });
-
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  if (!user || !isMatch || !user.isActive) {
+    throw new AppError('Invalid email or password', 401);
   }
-};
 
-// Get current user profile from token
-const getCurrentUser = async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+  res.status(200).json({ token: signToken(user), user: publicUser(user) });
+});
+
+const updateUserProfile = asyncHandler(async (req, res) => {
+  const { name, email, phone, currentPassword, newPassword } = req.body;
+
+  const user = await User.findById(req.user.id).select('+password');
+  if (!user) throw new AppError('User not found', 404);
+
+  if (newPassword) {
+    if (!currentPassword) throw new AppError('Current password is required to change password', 400);
+    if (!(await bcrypt.compare(currentPassword, user.password))) {
+      throw new AppError('Current password is incorrect', 400);
     }
-
-    res.status(200).json({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      username: user.username
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+    user.password = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
   }
-};
 
-module.exports = { registerUser, loginUser, updateUserProfile, getCurrentUser };
+  if (name) user.name = name;
+  if (phone) user.phone = phone;
+  if (email) user.email = email;
+
+  await user.save();
+
+  res.status(200).json({ message: 'Profile updated successfully', user: publicUser(user) });
+});
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id);
+  if (!user) throw new AppError('User not found', 404);
+  res.status(200).json(publicUser(user));
+});
+
+module.exports = { registerUser, createStaffAccount, loginUser, updateUserProfile, getCurrentUser };

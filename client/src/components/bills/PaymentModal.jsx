@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { createPaymentOrder, verifyPayment } from '../../features/bills/billSlice'
+import { useToast } from '../common/Toast'
 
 function PaymentModal({ bill, onClose, onSuccess }) {
   const dispatch = useDispatch()
+  const { notify } = useToast()
 
   useEffect(() => {
     // Load Razorpay script dynamically
@@ -18,7 +20,7 @@ function PaymentModal({ bill, onClose, onSuccess }) {
     // Step 1 — get order from backend
     const result = await dispatch(createPaymentOrder(bill._id))
     if (result.error) {
-      alert('Failed to initiate payment. Try again.')
+      notify('We could not start the payment. Please try again.', 'error')
       return
     }
 
@@ -42,11 +44,11 @@ function PaymentModal({ bill, onClose, onSuccess }) {
         }))
 
         if (verifyResult.meta.requestStatus === 'fulfilled') {
-          alert('Payment successful!')
+          notify('Payment successful. Your bill is now marked as paid.', 'success')
           onSuccess()
           onClose()
         } else {
-          alert('Payment verification failed. Contact support.')
+          notify('Payment verification failed. If you were charged, contact support.', 'error')
         }
       },
       prefill: {

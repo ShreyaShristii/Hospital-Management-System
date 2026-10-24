@@ -1,8 +1,9 @@
+const escapeRegex = require('../utils/escapeRegex');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 
-const addDoctor = async (req, res) => {
+const addDoctor = async (req, res, next) => {
   try {
     const {
       // User fields
@@ -49,11 +50,11 @@ const addDoctor = async (req, res) => {
     res.status(201).json({ message: 'Doctor added successfully', doctor: populatedDoctor });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAllDoctors = async (req, res) => {
+const getAllDoctors = async (req, res, next) => {
   try {
     const { search } = req.query;
     const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
@@ -63,9 +64,9 @@ const getAllDoctors = async (req, res) => {
     if (search) {
       filter = {
         $or: [
-          { 'userId.name': { $regex: search, $options: 'i' } },
-          { specialization: { $regex: search, $options: 'i' } },
-          { degree: { $regex: search, $options: 'i' } },
+          { 'userId.name': { $regex: escapeRegex(search), $options: 'i' } },
+          { specialization: { $regex: escapeRegex(search), $options: 'i' } },
+          { degree: { $regex: escapeRegex(search), $options: 'i' } },
         ],
       };
     }
@@ -79,11 +80,11 @@ const getAllDoctors = async (req, res) => {
 
     res.status(200).json(getPaginationResponse(doctors, total, page, limit));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getDoctorById = async (req, res) => {
+const getDoctorById = async (req, res, next) => {
   try {
     const doctor = await Doctor.findById(req.params.id).populate('userId', 'name email phone');
     if (!doctor) {
@@ -91,11 +92,11 @@ const getDoctorById = async (req, res) => {
     }
     res.status(200).json(doctor);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const updateDoctor = async (req, res) => {
+const updateDoctor = async (req, res, next) => {
   try {
     const doctor = await Doctor.findById(req.params.id);
     if (!doctor) {
@@ -112,11 +113,11 @@ const updateDoctor = async (req, res) => {
     
     res.status(200).json({ message: 'Doctor updated successfully', doctor: updatedDoctor });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const deleteDoctor = async (req, res) => {
+const deleteDoctor = async (req, res, next) => {
   try {
     const doctor = await Doctor.findByIdAndDelete(req.params.id);
     if (!doctor) {
@@ -124,7 +125,7 @@ const deleteDoctor = async (req, res) => {
     }
     res.status(200).json({ message: 'Doctor deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

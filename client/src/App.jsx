@@ -22,6 +22,7 @@ import DoctorProfilePage from './pages/DoctorProfilePage'
 import StaffProfilePage from './pages/StaffProfilePage'
 import ReviewsPage from './pages/ReviewsPage'
 import NotificationsPage from './pages/NotificationsPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 
 function App() {
@@ -184,6 +185,7 @@ function App() {
             <NotificationsPage />
           </PrivateRoute>
         } />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   )

@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { getPatients, deletePatient } from '../../features/patients/patientSlice'
 import Pagination from '../common/Pagination'
+import TableSkeleton from '../common/TableSkeleton'
+import EmptyState from '../common/EmptyState'
 
 function PatientList({ onEdit }) {
   const dispatch = useDispatch()
-  const { patients, isLoading, total, pages, page: currentPage, pageSize } = useSelector((state) => state.patients)
+  const { patients, isLoading, total, pages, pageSize } = useSelector((state) => state.patients)
   
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
@@ -41,8 +43,9 @@ function PatientList({ onEdit }) {
       {/* Search Box */}
       <div style={{ marginBottom: '20px' }}>
         <input
-          type="text"
-          placeholder="Search by name, contact, blood group..."
+          type="search"
+          aria-label="Search patients"
+          placeholder="Search by name, email or contact number"
           value={search}
           onChange={handleSearchChange}
           style={inputStyle}
@@ -52,42 +55,35 @@ function PatientList({ onEdit }) {
       </div>
 
       {/* Loading State */}
-      {isLoading && (
-        <div style={{
-          padding: '40px',
-          textAlign: 'center',
-          color: '#7f8c8d',
-          fontSize: '15px',
-        }}>
-          <div style={{ marginBottom: '12px' }}>⟳ Loading patients...</div>
-        </div>
-      )}
+      {isLoading && <TableSkeleton rows={6} columns={6} label="Loading patients" />}
 
       {/* Table */}
       {!isLoading && (
         <>
-          <div style={{ overflowX: 'auto', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <caption className="sr-only">Patient records</caption>
               <thead>
                 <tr style={{ background: '#2c3e50', color: 'white' }}>
-                  <th style={th}>Name</th>
-                  <th style={th}>Gender</th>
-                  <th style={th}>Blood Group</th>
-                  <th style={th}>Contact</th>
-                  <th style={th}>Status</th>
-                  <th style={th}>Actions</th>
+                  <th scope="col" style={th}>Name</th>
+                  <th scope="col" style={th}>Gender</th>
+                  <th scope="col" style={th}>Blood Group</th>
+                  <th scope="col" style={th}>Contact</th>
+                  <th scope="col" style={th}>Status</th>
+                  <th scope="col" style={th}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {patients.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{
-                      textAlign: 'center',
-                      padding: '40px 20px',
-                      color: '#7f8c8d',
-                      fontSize: '15px',
-                    }}>
-                      {search ? 'No patients match your search' : 'No patients found'}
+                    <td colSpan="6">
+                      <EmptyState
+                        title={search ? 'No patients match your search' : 'No patients yet'}
+                        description={search ? 'Try a different name, email or phone number.' : 'Registered patients will appear here.'}
+                        action={search && (
+                          <button className="btn btn-secondary" onClick={() => setSearch('')}>Clear search</button>
+                        )}
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -120,6 +116,7 @@ function PatientList({ onEdit }) {
                       <td style={td}>
                         <button
                           onClick={() => onEdit(patient)}
+                          aria-label={`Edit ${patient.userId?.name || 'patient'}`}
                           style={{
                             ...btn,
                             background: '#2980b9',
@@ -132,6 +129,7 @@ function PatientList({ onEdit }) {
                         </button>
                         <button
                           onClick={() => handleDelete(patient._id)}
+                          aria-label={`Delete ${patient.userId?.name || 'patient'}`}
                           style={{
                             ...btn,
                             background: '#e74c3c',

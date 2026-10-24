@@ -1,8 +1,14 @@
+const escapeRegex = require('../utils/escapeRegex');
 const Patient = require('../models/Patient');
 const User = require('../models/User');
 
+const PATIENT_EDITABLE_FIELDS = [
+  'age', 'gender', 'bloodGroup', 'allergies', 'address',
+  'emergencyContact', 'contactNumber', 'currentHealthStatus', 'previousRecords',
+];
+
 // Get current user's patient profile
-const getMyProfile = async (req, res) => {
+const getMyProfile = async (req, res, next) => {
   try {
     const patient = await Patient.findOne({ userId: req.user.id }).populate('userId', 'name email phone role');
     if (!patient) {
@@ -10,12 +16,12 @@ const getMyProfile = async (req, res) => {
     }
     res.status(200).json(patient);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Add new patient
-const addPatient = async (req, res) => {
+const addPatient = async (req, res, next) => {
   try {
     const { userId, userEmail, age, gender, bloodGroup, allergies, address, emergencyContact, contactNumber, currentHealthStatus } = req.body;
 
@@ -64,12 +70,12 @@ const addPatient = async (req, res) => {
     res.status(201).json({ message: 'Patient added successfully', patient });
 
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Get all patients
-const getAllPatients = async (req, res) => {
+const getAllPatients = async (req, res, next) => {
   try {
     const { search } = req.query;
     const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
@@ -77,15 +83,19 @@ const getAllPatients = async (req, res) => {
 
     let filter = {};
     if (search) {
-      // Search by patient name, email, or phone
+      // Mongo can't regex across a ref, so resolve matching users first.
+      const rx = { $regex: escapeRegex(search), $options: 'i' };
+      const users = await User.find({ $or: [{ name: rx }, { email: rx }] }).select('_id').lean();
       filter = {
         $or: [
-          { 'userId.name': { $regex: search, $options: 'i' } },
-          { 'userId.email': { $regex: search, $options: 'i' } },
-          { contactNumber: { $regex: search, $options: 'i' } },
+          { userId: { $in: users.map((u) => u._id) } },
+          { contactNumber: rx },
         ],
       };
     }
+
+    // Patients may only ever see their own record.
+    if (req.user.role === 'patient') filter = { $and: [filter, { userId: req.user.id }] };
 
     const total = await Patient.countDocuments(filter);
     const patients = await Patient.find(filter)
@@ -96,25 +106,28 @@ const getAllPatients = async (req, res) => {
 
     res.status(200).json(getPaginationResponse(patients, total, page, limit));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Get one patient
-const getPatientById = async (req, res) => {
+const getPatientById = async (req, res, next) => {
   try {
     const patient = await Patient.findById(req.params.id).populate('userId', 'name email phone role');
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }
+    if (req.user.role === 'patient' && String(patient.userId?._id) !== req.user.id) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
     res.status(200).json(patient);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Update patient
-const updatePatient = async (req, res) => {
+const updatePatient = async (req, res, next) => {
   try {
     const patient = await Patient.findById(req.params.id);
     if (!patient) {
@@ -126,17 +139,23 @@ const updatePatient = async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this patient profile' });
     }
 
-    const updatedPatient = await Patient.findByIdAndUpdate(req.params.id, req.body, { new: true })
-      .populate('userId', 'name email phone');
+    const updates = Object.fromEntries(
+      Object.entries(req.body).filter(([key]) => PATIENT_EDITABLE_FIELDS.includes(key))
+    );
+    const updatedPatient = await Patient.findByIdAndUpdate(
+      req.params.id,
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).populate('userId', 'name email phone');
     
     res.status(200).json({ message: 'Patient updated successfully', patient: updatedPatient });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Delete patient
-const deletePatient = async (req, res) => {
+const deletePatient = async (req, res, next) => {
   try {
     const patient = await Patient.findByIdAndDelete(req.params.id);
     if (!patient) {
@@ -144,7 +163,7 @@ const deletePatient = async (req, res) => {
     }
     res.status(200).json({ message: 'Patient deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

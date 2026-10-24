@@ -1,3 +1,4 @@
+const escapeRegex = require('../utils/escapeRegex');
 const Review = require('../models/Review');
 const Staff = require('../models/Staff');
 const Doctor = require('../models/Doctor');
@@ -8,7 +9,7 @@ const populateReview = (query) => query
   .populate('reviewerId', 'name email')
   .populate({ path: 'patientId', populate: { path: 'userId', select: 'name' } })
 
-const addReview = async (req, res) => {
+const addReview = async (req, res, next) => {
   try {
     let { staffId, doctorId, patientId, rating, comment, category, isAnonymous } = req.body;
 
@@ -59,11 +60,11 @@ const addReview = async (req, res) => {
     const populated = await populateReview(Review.findById(review._id))
     res.status(201).json({ message: 'Review added successfully', review: populated });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getAllReviews = async (req, res) => {
+const getAllReviews = async (req, res, next) => {
   try {
     const { search, rating } = req.query;
     const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
@@ -75,9 +76,9 @@ const getAllReviews = async (req, res) => {
       filter = {
         ...filter,
         $or: [
-          { 'patientId.userId.name': { $regex: search, $options: 'i' } },
-          { 'staffId.userId.name': { $regex: search, $options: 'i' } },
-          { reviewText: { $regex: search, $options: 'i' } },
+          { 'patientId.userId.name': { $regex: escapeRegex(search), $options: 'i' } },
+          { 'staffId.userId.name': { $regex: escapeRegex(search), $options: 'i' } },
+          { reviewText: { $regex: escapeRegex(search), $options: 'i' } },
         ],
       };
     }
@@ -92,32 +93,32 @@ const getAllReviews = async (req, res) => {
 
     res.status(200).json(getPaginationResponse(reviews, total, page, limit));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getReviewById = async (req, res) => {
+const getReviewById = async (req, res, next) => {
   try {
     const review = await populateReview(Review.findById(req.params.id))
     if (!review) return res.status(404).json({ message: 'Review not found' });
     res.status(200).json(review);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getReviewsByStaff = async (req, res) => {
+const getReviewsByStaff = async (req, res, next) => {
   try {
     const reviews = await populateReview(
       Review.find({ staffId: req.params.staffId }).sort({ createdAt: -1 })
     )
     res.status(200).json(reviews);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getStaffAverageRating = async (req, res) => {
+const getStaffAverageRating = async (req, res, next) => {
   try {
     const reviews = await Review.find({ staffId: req.params.staffId });
     if (reviews.length === 0) {
@@ -131,22 +132,22 @@ const getStaffAverageRating = async (req, res) => {
       totalReviews: reviews.length
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getReviewsByDoctor = async (req, res) => {
+const getReviewsByDoctor = async (req, res, next) => {
   try {
     const reviews = await populateReview(
       Review.find({ doctorId: req.params.doctorId }).sort({ createdAt: -1 })
     )
     res.status(200).json(reviews);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getDoctorAverageRating = async (req, res) => {
+const getDoctorAverageRating = async (req, res, next) => {
   try {
     const reviews = await Review.find({ doctorId: req.params.doctorId });
     if (reviews.length === 0) {
@@ -160,11 +161,11 @@ const getDoctorAverageRating = async (req, res) => {
       totalReviews: reviews.length
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const updateReview = async (req, res) => {
+const updateReview = async (req, res, next) => {
   try {
     const { rating, comment, category } = req.body;
     const review = await populateReview(
@@ -177,17 +178,17 @@ const updateReview = async (req, res) => {
     if (!review) return res.status(404).json({ message: 'Review not found' });
     res.status(200).json({ message: 'Review updated successfully', review });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const deleteReview = async (req, res) => {
+const deleteReview = async (req, res, next) => {
   try {
     const review = await Review.findByIdAndDelete(req.params.id);
     if (!review) return res.status(404).json({ message: 'Review not found' });
     res.status(200).json({ message: 'Review deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

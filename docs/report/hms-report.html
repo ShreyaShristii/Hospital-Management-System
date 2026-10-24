@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>HMS Transformation Report</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm 20mm 16mm;
+    @bottom-right { content: counter(page); font: 9pt 'Segoe UI', sans-serif; color: #7a8899; }
+    @bottom-left { content: "HMS - Transformation Report & Interview Guide"; font: 9pt 'Segoe UI', sans-serif; color: #7a8899; }
+  }
+  @page :first { margin: 0; @bottom-right { content: none; } @bottom-left { content: none; } }
+
+  :root {
+    --navy: #0f2d4a; --primary: #1a4f7a; --accent: #2b7de9; --muted: #5b6b7d;
+    --border: #dfe6ee; --bg: #f4f7fb; --green: #1e8e4e; --red: #c0392b; --amber: #b9650b;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'DM Sans', system-ui, sans-serif; font-size: 10pt; line-height: 1.5; color: #1f2d3d; margin: 0; }
+  h1, h2, h3, h4 { color: var(--navy); line-height: 1.25; margin: 0; }
+  h1.section { font-size: 22pt; padding-bottom: 8px; border-bottom: 3px solid var(--accent); margin-bottom: 14px; }
+  h2 { font-size: 14pt; margin: 18px 0 8px; }
+  h3 { font-size: 11.5pt; margin: 12px 0 6px; }
+  p { margin: 0 0 8px; }
+  ul { margin: 0 0 8px; padding-left: 18px; }
+  li { margin-bottom: 2px; }
+  code { font-family: Consolas, 'Cascadia Code', monospace; font-size: 8.8pt; background: #eef2f7; padding: 1px 4px; border-radius: 3px; }
+  pre { font-family: Consolas, 'Cascadia Code', monospace; font-size: 8.3pt; line-height: 1.4; background: #0f2233; color: #dbe7f3; padding: 10px 12px; border-radius: 6px; margin: 4px 0 8px; white-space: pre-wrap; break-inside: avoid; }
+  pre .c { color: #7f98b0; }
+  a { color: var(--primary); text-decoration: none; }
+  .page-break { break-before: page; }
+  .avoid { break-inside: avoid; }
+  .muted { color: var(--muted); }
+  .small { font-size: 8.8pt; }
+
+  /* Cover */
+  .cover { height: 297mm; width: 210mm; background: linear-gradient(160deg, #0f2d4a 0%, #1a4f7a 60%, #2b7de9 100%); color: #fff; padding: 34mm 22mm; display: flex; flex-direction: column; }
+  .cover .logo { width: 56px; height: 56px; border-radius: 12px; background: #2b7de9; display: grid; place-items: center; font-size: 28px; font-weight: 700; border: 2px solid rgba(255,255,255,.35); }
+  .cover h1 { color: #fff; font-size: 34pt; margin-top: 40mm; font-weight: 700; letter-spacing: -.5px; }
+  .cover .sub { font-size: 14pt; color: #cfe2f7; margin-top: 10px; }
+  .cover .tags { margin-top: 18mm; display: flex; gap: 8px; flex-wrap: wrap; }
+  .cover .tags span { border: 1px solid rgba(255,255,255,.4); border-radius: 999px; padding: 5px 12px; font-size: 10pt; }
+  .cover .meta { margin-top: auto; font-size: 10pt; color: #cfe2f7; border-top: 1px solid rgba(255,255,255,.25); padding-top: 12px; display: flex; justify-content: space-between; }
+
+  /* TOC */
+  .toc ol { list-style: none; padding: 0; counter-reset: s; }
+  .toc li { display: flex; align-items: baseline; padding: 9px 0; border-bottom: 1px dashed var(--border); font-size: 11.5pt; }
+  .toc li .n { width: 34px; color: var(--accent); font-weight: 700; }
+  .toc li a { color: var(--navy); font-weight: 600; }
+  .toc li .d { margin-left: auto; color: var(--muted); font-size: 9.5pt; }
+
+  /* Components */
+  .callout { border-left: 4px solid var(--accent); background: var(--bg); padding: 10px 14px; border-radius: 0 6px 6px 0; margin: 8px 0 12px; break-inside: avoid; }
+  .callout.warn { border-color: var(--amber); background: #fff7ec; }
+  .callout.good { border-color: var(--green); background: #eefaf3; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .kpi { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; break-inside: avoid; }
+  .kpi .v { font-size: 20pt; font-weight: 700; color: var(--primary); }
+  .kpi .l { font-size: 8.8pt; color: var(--muted); }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: 9pt; break-inside: auto; }
+  th { background: var(--navy); color: #fff; text-align: left; padding: 6px 8px; font-weight: 600; }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr { break-inside: avoid; }
+  tbody tr:nth-child(even) td { background: #f8fafc; }
+
+  .cat { display: inline-block; font-size: 8pt; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: #fff; background: var(--primary); padding: 2px 8px; border-radius: 4px; margin-bottom: 6px; }
+  .card { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; break-inside: avoid; }
+  .card h4 { font-size: 10.8pt; margin-bottom: 4px; }
+  .card .files { font-family: Consolas, monospace; font-size: 8pt; color: var(--muted); margin-bottom: 6px; }
+  .card dl { display: grid; grid-template-columns: 112px 1fr; gap: 3px 10px; margin: 0; font-size: 9pt; }
+  .card dt { font-weight: 600; color: var(--primary); }
+  .card dd { margin: 0; }
+  .card dd.talk { font-style: italic; color: #24425f; }
+
+  .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; break-inside: avoid; margin-bottom: 6px; }
+  .ba .b, .ba .a { border-radius: 8px; padding: 8px 10px; }
+  .ba .b { background: #fdf0ee; border: 1px solid #f3c9c3; }
+  .ba .a { background: #edf8f1; border: 1px solid #bfe5cd; }
+  .ba h5 { margin: 0 0 4px; font-size: 9pt; text-transform: uppercase; letter-spacing: .5px; }
+  .ba .b h5 { color: var(--red); } .ba .a h5 { color: var(--green); }
+  .ba pre { margin: 0; font-size: 7.8pt; }
+  .benefits { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 16px; }
+  .benefits span { font-size: 8pt; padding: 2px 8px; border-radius: 999px; background: #e8f0fb; color: var(--primary); font-weight: 600; }
+
+  .qa { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; break-inside: avoid; }
+  .qa .q { font-weight: 700; color: var(--navy); font-size: 10.5pt; margin-bottom: 4px; }
+  .qa .lbl { font-weight: 600; color: var(--primary); }
+  .qa .fu { margin-top: 4px; font-size: 8.8pt; color: var(--muted); }
+
+  .learn { border: 1px solid var(--border); border-top: 4px solid var(--accent); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; break-inside: avoid; }
+  .learn h4 { font-size: 11pt; display: flex; justify-content: space-between; align-items: center; }
+  .lvl { font-size: 7.8pt; font-weight: 700; padding: 2px 8px; border-radius: 999px; color: #fff; }
+  .lvl.b { background: var(--green); } .lvl.i { background: var(--amber); } .lvl.a { background: var(--red); }
+  .learn .row { font-size: 9pt; margin-top: 3px; }
+  .learn .row b { color: var(--primary); }
+  .learn .res { font-size: 8.4pt; color: var(--muted); margin-top: 4px; }
+
+  .bar { display: grid; grid-template-columns: 150px 1fr 70px; align-items: center; gap: 10px; margin: 6px 0; font-size: 9.5pt; }
+  .bar .track { height: 12px; background: #e9eef4; border-radius: 6px; position: relative; overflow: hidden; }
+  .bar .before { position: absolute; left: 0; top: 0; bottom: 0; background: #e3a49b; border-radius: 6px; }
+  .bar .after { position: absolute; left: 0; top: 3px; bottom: 3px; background: var(--accent); border-radius: 6px; opacity: .9; }
+  .legend { font-size: 8.5pt; color: var(--muted); display: flex; gap: 16px; margin-bottom: 6px; }
+  .legend i { display: inline-block; width: 12px; height: 8px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
+
+  figure { margin: 8px 0 12px; break-inside: avoid; text-align: center; }
+  figcaption { font-size: 8.5pt; color: var(--muted); margin-top: 4px; }
+  svg text { font-family: 'Segoe UI', sans-serif; }
+</style>
+</head>
+<body>
+
+<!-- ============================ COVER ============================ -->
+<section class="cover">
+  <div class="logo">H</div>
+  <h1>Hospital Management System</h1>
+  <div class="sub">Project Transformation Report, Interview Guide &amp; Learning Roadmap</div>
+  <div class="tags">
+    <span>Architecture</span><span>Security</span><span>Testing</span><span>CI/CD &amp; Docker</span><span>UX &amp; Design</span><span>Interview Prep</span>
+  </div>
+  <div class="meta">
+    <span>MERN stack: React 18 · Express · MongoDB</span>
+    <span>October 2026</span>
+  </div>
+</section>
+
+<!-- ============================ TOC ============================ -->
+<section class="page-break toc">
+  <h1 class="section">Contents</h1>
+  <ol>
+    <li><span class="n">0</span><a href="#summary">Executive Summary</a><span class="d">The one-page version</span></li>
+    <li><span class="n">1</span><a href="#overview">Project Overview</a><span class="d">What it does, old vs new architecture</span></li>
+    <li><span class="n">2</span><a href="#changelog">Complete Change Log</a><span class="d">Every change, grouped by category</span></li>
+    <li><span class="n">3</span><a href="#beforeafter">Before vs After</a><span class="d">The most important code-level shifts</span></li>
+    <li><span class="n">4</span><a href="#cheatsheet">Interview Cheat Sheet</a><span class="d">Concepts, answers, follow-ups</span></li>
+    <li><span class="n">5</span><a href="#roadmap">Learning Roadmap</a><span class="d">What to study next, and why it's worth it</span></li>
+    <li><span class="n">6</span><a href="#recruiter">Recruiter View</a><span class="d">How the project reads now</span></li>
+    <li><span class="n">7</span><a href="#portfolio">Portfolio Value</a><span class="d">Resume, screenshots, demo script</span></li>
+    <li><span class="n">8</span><a href="#assessment">Final Assessment</a><span class="d">Scores and honest remaining gaps</span></li>
+  </ol>
+  <div class="callout" style="margin-top:24px">
+    <b>How to use this document.</b> Read Section 0 and Section 3 first; they hold 80% of what you need for an interview.
+    Use Section 4 the night before an interview. Use Section 5 to plan the next few weeks of study.
+  </div>
+</section>
+
+<!-- ============================ SUMMARY ============================ -->
+<section class="page-break" id="summary">
+  <h1 class="section">0 · Executive Summary</h1>
+  <p>HMS started as a feature-rich but fragile MERN application: 15 modules and 7 roles, but no tests, no validation,
+  a privilege-escalation bug at sign-up, and two competing visual styles. Three passes were made on it:
+  <b>engineering hardening</b>, <b>UX and design</b>, and this <b>documentation</b> pass.</p>
+
+  <div class="grid3" style="margin:12px 0">
+    <div class="kpi"><div class="v">~4.0 → 6.3</div><div class="l">Overall score (out of 10)</div></div>
+    <div class="kpi"><div class="v">0 → 30</div><div class="l">Automated tests (21 backend, 9 client)</div></div>
+    <div class="kpi"><div class="v">247 → 0</div><div class="l">Lint errors (18 warnings remain)</div></div>
+    <div class="kpi"><div class="v">7</div><div class="l">Critical security issues closed</div></div>
+    <div class="kpi"><div class="v">1 pipeline</div><div class="l">GitHub Actions CI: test, lint, build, Docker</div></div>
+    <div class="kpi"><div class="v">Junior → SDE-1</div><div class="l">Level the project now reads as</div></div>
+  </div>
+
+  <h2>The five changes that matter most</h2>
+  <table>
+    <thead><tr><th style="width:28%">Change</th><th>Why an interviewer cares</th></tr></thead>
+    <tbody>
+      <tr><td><b>Role can no longer be chosen at sign-up</b></td><td>Before, anyone could register as <code>admin</code>. This is the classic "trust the client" mistake and the fastest way to fail a review.</td></tr>
+      <tr><td><b>Centralized error handling</b></td><td>Shows you understand Express middleware order, async errors, and not leaking internals.</td></tr>
+      <tr><td><b>Object-level authorization + field allowlists</b></td><td>Fixes IDOR and mass assignment, two OWASP Top 10 issues that most portfolio projects have.</td></tr>
+      <tr><td><b>Payment flow made tamper-proof and idempotent</b></td><td>Shows trust boundaries, constant-time comparison and idempotency, which are real fintech concerns.</td></tr>
+      <tr><td><b>Tests + CI + Docker</b></td><td>Turns "it works on my machine" into "every change is verified automatically".</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout warn">
+    <b>Be honest in interviews.</b> Some work is partial: validation covers auth and payments only; the service layer has one
+    service (<code>tokenService</code>); backend tests mock Mongoose (no real-DB tests); Docker images were written but not run;
+    only the Patients list uses the new skeleton and empty states. Saying this unprompted reads as senior, not weak.
+  </div>
+</section>
+
+<!-- ============================ 1. OVERVIEW ============================ -->
+<section class="page-break" id="overview">
+  <h1 class="section">1 · Project Overview</h1>
+
+  <h2>What the application does</h2>
+  <p>A role-based hospital platform. Seven roles (<b>admin, doctor, patient, receptionist, nurse, lab staff, pharmacist</b>)
+  each see a tailored dashboard and navigation. Modules: appointments, patients, doctors, staff, departments, beds and admissions,
+  electronic medical records (EMR), lab tests, pharmacy stock, billing with Razorpay online payment, reviews and notifications.</p>
+
+  <h2>Technology stack</h2>
+  <table>
+    <thead><tr><th>Layer</th><th>Technology</th><th>Added in this transformation</th></tr></thead>
+    <tbody>
+      <tr><td>Frontend</td><td>React 18, Redux Toolkit, React Router 6, Axios, Vite</td><td>Axios interceptors, ErrorBoundary, design tokens, PageLayout, Toasts</td></tr>
+      <tr><td>Backend</td><td>Node.js, Express 4, Mongoose 9, JWT, bcryptjs</td><td>express-validator (now actually used), pino / pino-http</td></tr>
+      <tr><td>Security</td><td>helmet, express-rate-limit, express-mongo-sanitize, CORS</td><td>Algorithm pinning, timing-safe compare, regex escaping</td></tr>
+      <tr><td>Payments</td><td>Razorpay</td><td>Order-to-bill binding, idempotent verification</td></tr>
+      <tr><td>Testing</td><td>node:test (client)</td><td>Jest + Supertest (backend)</td></tr>
+      <tr><td>DevOps</td><td>Vercel (client only)</td><td>Dockerfiles, docker-compose, GitHub Actions</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Original architecture</h2>
+  <figure>
+    <svg width="640" height="190" viewBox="0 0 640 190" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5b6b7d"/></marker></defs>
+      <rect x="10" y="60" width="140" height="70" rx="8" fill="#e8f0fb" stroke="#1a4f7a"/>
+      <text x="80" y="88" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2d4a">React SPA</text>
+      <text x="80" y="106" text-anchor="middle" font-size="9.5" fill="#5b6b7d">14 slices × own token code</text>
+      <text x="80" y="120" text-anchor="middle" font-size="9.5" fill="#5b6b7d">JWT in localStorage</text>
+      <line x1="150" y1="95" x2="200" y2="95" stroke="#5b6b7d" stroke-width="1.5" marker-end="url(#ar)"/>
+      <rect x="205" y="20" width="270" height="150" rx="8" fill="#fdf0ee" stroke="#c0392b"/>
+      <text x="340" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2d4a">server.js (everything)</text>
+      <text x="340" y="64" text-anchor="middle" font-size="9.5" fill="#5b6b7d">middleware + route mounting + listen()</text>
+      <text x="340" y="84" text-anchor="middle" font-size="9.5" fill="#5b6b7d">controllers: logic + authz + queries + try/catch 500</text>
+      <text x="340" y="104" text-anchor="middle" font-size="9.5" fill="#c0392b">error handler never reached</text>
+      <text x="340" y="124" text-anchor="middle" font-size="9.5" fill="#c0392b">no validation · role from req.body</text>
+      <text x="340" y="144" text-anchor="middle" font-size="9.5" fill="#c0392b">no tests · no logs in production</text>
+      <line x1="475" y1="95" x2="525" y2="95" stroke="#5b6b7d" stroke-width="1.5" marker-end="url(#ar)"/>
+      <rect x="530" y="60" width="100" height="70" rx="8" fill="#e8f0fb" stroke="#1a4f7a"/>
+      <text x="580" y="92" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2d4a">MongoDB</text>
+      <text x="580" y="110" text-anchor="middle" font-size="9.5" fill="#5b6b7d">no indexes</text>
+    </svg>
+    <figcaption>Figure 1. Before: a working app with no seams for testing, no input boundary and no observability.</figcaption>
+  </figure>
+
+  <h2>New architecture</h2>
+  <figure>
+    <svg width="660" height="300" viewBox="0 0 660 300" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="ar2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5b6b7d"/></marker></defs>
+      <rect x="10" y="20" width="150" height="260" rx="8" fill="#e8f0fb" stroke="#1a4f7a"/>
+      <text x="85" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2d4a">React SPA</text>
+      <g font-size="9.5" fill="#24425f">
+        <rect x="22" y="56" width="126" height="26" rx="5" fill="#fff" stroke="#dfe6ee"/><text x="85" y="73" text-anchor="middle">ErrorBoundary + Toasts</text>
+        <rect x="22" y="88" width="126" height="26" rx="5" fill="#fff" stroke="#dfe6ee"/><text x="85" y="105" text-anchor="middle">Navbar + PageLayout</text>
+        <rect x="22" y="120" width="126" height="26" rx="5" fill="#fff" stroke="#dfe6ee"/><text x="85" y="137" text-anchor="middle">Route guards</text>
+        <rect x="22" y="152" width="126" height="26" rx="5" fill="#fff" stroke="#dfe6ee"/><text x="85" y="169" text-anchor="middle">Redux slices</text>
+        <rect x="22" y="184" width="126" height="40" rx="5" fill="#dff0e6" stroke="#1e8e4e"/><text x="85" y="201" text-anchor="middle">Axios interceptors</text><text x="85" y="215" text-anchor="middle">token · global 401</text>
+      </g>
+      <line x1="160" y1="150" x2="200" y2="150" stroke="#5b6b7d" stroke-width="1.5" marker-end="url(#ar2)"/>
+      <rect x="205" y="20" width="330" height="260" rx="8" fill="#f8fafc" stroke="#1a4f7a"/>
+      <text x="370" y="42" text-anchor="middle" font-size="12" font-weight="700" fill="#0f2d4a">Express API</text>
+      <g font-size="9.5" fill="#24425f">
+        <rect x="218" y="54" width="304" height="24" rx="5" fill="#fff" stroke="#dfe6ee"/><text x="370" y="70" text-anchor="middle">server.js: env check · connect DB · listen · graceful shutdown</text>
+        <rect x="218" y="84" width="304" height="24" rx="5" fill="#fff" stroke="#dfe6ee"/><text x="370" y="100" text-anchor="middle">app.js: pino-http · helmet · CORS · body limit · sanitize · rate limit</text>
+        <rect x="218" y="114" width="304" height="24" rx="5" fill="#fff" stroke="#dfe6ee"/><text x="370" y="130" text-anchor="middle">routes/index.js: /api/health · ObjectId param check</text>
+        <rect x="218" y="144" width="148" height="24" rx="5" fill="#fff" stroke="#dfe6ee"/><text x="292" y="160" text-anchor="middle">protect (JWT + user)</text>
+        <rect x="374" y="144" width="148" height="24" rx="5" fill="#fff" stroke="#dfe6ee"/><text x="448" y="160" text-anchor="middle">authorize(roles) · validate</text>
+        <rect x="218" y="174" width="148" height="24" rx="5" fill="#fff" stroke="#dfe6ee"/><text x="292" y="190" text-anchor="middle">controllers</text>
+        <rect x="374" y="174" width="148" height="24" rx="5" fill="#fff" stroke="#dfe6ee"/><text x="448" y="190" text-anchor="middle">services (tokenService)</text>
+        <rect x="218" y="208" width="304" height="26" rx="5" fill="#fdf0ee" stroke="#c0392b"/><text x="370" y="225" text-anchor="middle">errorMiddleware: one JSON error shape, safe in production</text>
+        <text x="370" y="262" text-anchor="middle" fill="#5b6b7d">tests: Jest + Supertest import app.js directly</text>
+      </g>
+      <line x1="535" y1="110" x2="565" y2="110" stroke="#5b6b7d" stroke-width="1.5" marker-end="url(#ar2)"/>
+      <line x1="535" y1="200" x2="565" y2="200" stroke="#5b6b7d" stroke-width="1.5" marker-end="url(#ar2)"/>
+      <rect x="570" y="80" width="80" height="60" rx="8" fill="#e8f0fb" stroke="#1a4f7a"/>
+      <text x="610" y="106" text-anchor="middle" font-size="11" font-weight="700" fill="#0f2d4a">MongoDB</text>
+      <text x="610" y="122" text-anchor="middle" font-size="8.5" fill="#5b6b7d">indexes</text>
+      <rect x="570" y="170" width="80" height="60" rx="8" fill="#e8f0fb" stroke="#1a4f7a"/>
+      <text x="610" y="198" text-anchor="middle" font-size="11" font-weight="700" fill="#0f2d4a">Razorpay</text>
+      <text x="610" y="214" text-anchor="middle" font-size="8.5" fill="#5b6b7d">order-bound</text>
+    </svg>
+    <figcaption>Figure 2. After: clear boundaries; each layer has one job and can be tested in isolation.</figcaption>
+  </figure>
+
+  <h2>Request lifecycle (end to end)</h2>
+  <figure>
+    <svg width="660" height="110" viewBox="0 0 660 110" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="ar3" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1a4f7a"/></marker></defs>
+      <g font-size="9" fill="#0f2d4a" text-anchor="middle">
+        <rect x="2" y="30" width="78" height="44" rx="6" fill="#e8f0fb" stroke="#1a4f7a"/><text x="41" y="50">Component</text><text x="41" y="63">dispatch</text>
+        <rect x="94" y="30" width="78" height="44" rx="6" fill="#e8f0fb" stroke="#1a4f7a"/><text x="133" y="50">Interceptor</text><text x="133" y="63">+ Bearer</text>
+        <rect x="186" y="30" width="78" height="44" rx="6" fill="#e8f0fb" stroke="#1a4f7a"/><text x="225" y="50">Security</text><text x="225" y="63">middleware</text>
+        <rect x="278" y="30" width="78" height="44" rx="6" fill="#e8f0fb" stroke="#1a4f7a"/><text x="317" y="50">protect</text><text x="317" y="63">authorize</text>
+        <rect x="370" y="30" width="78" height="44" rx="6" fill="#e8f0fb" stroke="#1a4f7a"/><text x="409" y="50">validate</text><text x="409" y="63">400 early</text>
+        <rect x="462" y="30" width="78" height="44" rx="6" fill="#e8f0fb" stroke="#1a4f7a"/><text x="501" y="50">controller</text><text x="501" y="63">+ Mongo</text>
+        <rect x="554" y="30" width="100" height="44" rx="6" fill="#dff0e6" stroke="#1e8e4e"/><text x="604" y="50">JSON response</text><text x="604" y="63">or errorHandler</text>
+      </g>
+      <g stroke="#1a4f7a" stroke-width="1.4">
+        <line x1="80" y1="52" x2="92" y2="52" marker-end="url(#ar3)"/><line x1="172" y1="52" x2="184" y2="52" marker-end="url(#ar3)"/>
+        <line x1="264" y1="52" x2="276" y2="52" marker-end="url(#ar3)"/><line x1="356" y1="52" x2="368" y2="52" marker-end="url(#ar3)"/>
+        <line x1="448" y1="52" x2="460" y2="52" marker-end="url(#ar3)"/><line x1="540" y1="52" x2="552" y2="52" marker-end="url(#ar3)"/>
+      </g>
+      <text x="330" y="100" text-anchor="middle" font-size="9" fill="#5b6b7d">A 401 anywhere comes back to the interceptor, which logs the user out once, globally.</text>
+    </svg>
+  </figure>
+
+  <h2>Key engineering decisions</h2>
+  <ul>
+    <li><b>Split <code>app.js</code> from <code>server.js</code>.</b> Tests can import the app without opening a port or connecting to a database.</li>
+    <li><b>Validate at the edge, enforce in the database.</b> Request validators reject bad input early; schema rules and unique indexes are the last line of defence (for example, preventing double-booking).</li>
+    <li><b>Never trust client-supplied identity or money.</b> Role, doctor identity, bill totals and the bill being paid are all derived on the server.</li>
+    <li><b>Re-check the user on every request.</b> One extra indexed lookup makes deactivation and role changes take effect immediately.</li>
+    <li><b>Incremental UI system, not a rewrite.</b> Design tokens and shared layout first; existing screens keep working while they migrate.</li>
+  </ul>
+</section>
+
+<!-- ============================ 2. CHANGE LOG ============================ -->
+<section class="page-break" id="changelog">
+  <h1 class="section">2 · Complete Change Log</h1>
+  <p class="muted">Each card follows the same structure: what existed, what exists now, why, and how to say it in an interview.</p>
+
+  <span class="cat">Architecture</span>
+  <div class="card"><h4>App / server split with a real bootstrap</h4>
+    <div class="files">backend/app.js · backend/server.js · backend/config/env.js · backend/config/db.js</div>
+    <dl>
+      <dt>Before</dt><dd>One <code>server.js</code> built the app, called <code>connectDB()</code> without awaiting it, and started listening immediately.</dd>
+      <dt>Now</dt><dd><code>app.js</code> exports the Express app. <code>server.js</code> validates env, awaits the DB, listens, and shuts down gracefully on SIGTERM/SIGINT.</dd>
+      <dt>Why</dt><dd>The server could accept traffic before the DB was ready, and the app could not be tested without a live server.</dd>
+      <dt>Benefits</dt><dd>Testability, safe startup, clean container stops.</dd>
+      <dt>Recruiter impact</dt><dd>Shows you understand application lifecycle, not just routes.</dd>
+      <dt>Talking point</dt><dd class="talk">"I separated composition from runtime so Supertest can import the app, and the process only accepts traffic once dependencies are healthy."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Central route registry</h4>
+    <div class="files">backend/routes/index.js</div>
+    <dl>
+      <dt>Before</dt><dd>15 <code>require</code> and <code>app.use</code> pairs in <code>server.js</code>, inconsistently indented, including a commented-out duplicate.</dd>
+      <dt>Now</dt><dd>One map of path to router. ObjectId validation is attached to every router's <code>:id</code>-style params automatically.</dd>
+      <dt>Why</dt><dd>A cross-cutting rule (valid ids) should be applied once, not remembered per file.</dd>
+      <dt>Talking point</dt><dd class="talk">"Cross-cutting concerns go in one place so new routes get them for free."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Token service (first service-layer module)</h4>
+    <div class="files">backend/services/tokenService.js · authController.js · authMiddleware.js</div>
+    <dl>
+      <dt>Before</dt><dd><code>jwt.sign</code> in the controller, <code>jwt.verify</code> in middleware, with no shared options.</dd>
+      <dt>Now</dt><dd><code>signToken</code> / <code>verifyToken</code> with the algorithm pinned to HS256 and a configurable expiry.</dd>
+      <dt>Why</dt><dd>Security settings that live in two places drift apart.</dd>
+      <dt>Talking point</dt><dd class="talk">"JWT policy lives in one module; changing expiry or algorithm is a one-line change."</dd>
+    </dl></div>
+
+  <span class="cat">Backend</span>
+  <div class="card"><h4>Centralized error handling and a standard error shape</h4>
+    <div class="files">middlewares/errorMiddleware.js · utils/AppError.js · utils/asyncHandler.js · all 15 controllers</div>
+    <dl>
+      <dt>Before</dt><dd>Every handler ended with <code>res.status(500).json({ message: error.message })</code>. The global handler existed but was unreachable. Bad ids returned 500.</dd>
+      <dt>Now</dt><dd>Controllers call <code>next(error)</code> or throw <code>AppError</code>. One handler maps CastError→400, ValidationError→400, duplicate key→409, JWT errors→401, and hides 500 messages in production.</dd>
+      <dt>Why</dt><dd>Leaking database messages helps attackers; wrong status codes break clients.</dd>
+      <dt>Benefits</dt><dd>Consistent <code>{ success:false, message, details? }</code>; less code per handler.</dd>
+      <dt>Recruiter impact</dt><dd>One of the first things reviewers check in an Express codebase.</dd>
+      <dt>Talking point</dt><dd class="talk">"Controllers describe the happy path; one middleware decides status codes and what is safe to expose."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Health endpoint</h4>
+    <div class="files">routes/index.js · backend/Dockerfile (HEALTHCHECK)</div>
+    <dl>
+      <dt>Before</dt><dd><code>GET /</code> returned a static string, even when the database was down.</dd>
+      <dt>Now</dt><dd><code>GET /api/health</code> returns uptime and DB state; 503 when Mongo is disconnected. It is excluded from rate limiting.</dd>
+      <dt>Talking point</dt><dd class="talk">"Health reflects dependencies, so orchestrators restart or route away from a broken instance."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Structured logging</h4>
+    <div class="files">utils/logger.js · app.js · server.js</div>
+    <dl>
+      <dt>Before</dt><dd><code>console.log</code> gated on <code>NODE_ENV !== 'production'</code>, so production had no logs at all.</dd>
+      <dt>Now</dt><dd>pino JSON logs with a request id per request (honours <code>x-request-id</code>), and redaction of passwords and auth headers.</dd>
+      <dt>Talking point</dt><dd class="talk">"Every log line has a request id, so I can follow one user's failing request across the system."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Search that actually works</h4>
+    <div class="files">patientController.js · appointmentController.js · billController.js</div>
+    <dl>
+      <dt>Before</dt><dd><code>$regex</code> on <code>'userId.name'</code>, a field that does not exist on the stored document, so it never matched. Appointments filtered in memory <i>after</i> pagination, so totals were wrong.</dd>
+      <dt>Now</dt><dd>Matching users are resolved first, then the query filters by their ids before skip/limit.</dd>
+      <dt>Talking point</dt><dd class="talk">"MongoDB populate is a client-side join, so you cannot query a populated field. I resolve references first."</dd>
+    </dl></div>
+
+  <span class="cat">Database</span>
+  <div class="card"><h4>Schema validation, timestamps and indexes</h4>
+    <div class="files">models/User.js · Patient.js · Appointment.js · Bill.js</div>
+    <dl>
+      <dt>Before</dt><dd>No indexes; no <code>timestamps</code>, yet code sorted by <code>createdAt</code>; mixed-case emails; password hash returned by default.</dd>
+      <dt>Now</dt><dd>Length, format and range rules; <code>lowercase</code> emails; <code>password select:false</code>; timestamps; indexes on common filters; unique <code>Patient.userId</code>.</dd>
+      <dt>Talking point</dt><dd class="talk">"Validation at the API is for good error messages; validation in the schema is for data integrity."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Double-booking prevention (race-free)</h4>
+    <div class="files">models/Appointment.js</div>
+    <dl>
+      <dt>Before</dt><dd>Two patients could book the same doctor at the same time.</dd>
+      <dt>Now</dt><dd>A partial unique index on <code>(doctorId, date, time)</code> where <code>status = 'Scheduled'</code>. Collisions return 409.</dd>
+      <dt>Why</dt><dd>A "check then insert" in code has a race window; the database constraint does not.</dd>
+      <dt>Talking point</dt><dd class="talk">"I pushed the invariant into the database, so concurrent requests cannot violate it."</dd>
+    </dl></div>
+
+  <span class="cat">Security</span>
+  <div class="card"><h4>Privilege escalation at registration</h4>
+    <div class="files">authController.js · authRoutes.js · client AddStaffForm.jsx</div>
+    <dl>
+      <dt>Before</dt><dd><code>role: role || 'patient'</code>, so <code>{"role":"admin"}</code> created an admin.</dd>
+      <dt>Now</dt><dd>Public sign-up always creates a patient. Staff accounts use the admin-only <code>POST /api/auth/staff-accounts</code>.</dd>
+      <dt>Recruiter impact</dt><dd>Removes the single biggest red flag in the repository.</dd>
+      <dt>Talking point</dt><dd class="talk">"Authorization data never comes from the client. Roles are assigned by a privileged path."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Login and session hardening</h4>
+    <div class="files">authController.js · authMiddleware.js · tokenService.js · models/User.js</div>
+    <dl>
+      <dt>Before</dt><dd>404 "User not found" vs 400 "Invalid password" (user enumeration); <code>isActive</code> ignored; bcrypt cost 10; JWT role trusted for 24h.</dd>
+      <dt>Now</dt><dd>One generic 401; comparison against a dummy hash flattens timing; bcrypt 12; inactive users rejected; every request re-reads role and active state.</dd>
+      <dt>Talking point</dt><dd class="talk">"Login doesn't reveal which emails exist, and deactivating a user takes effect on their next request."</dd>
+    </dl></div>
+
+  <div class="card"><h4>IDOR and mass assignment</h4>
+    <div class="files">patientController.js · appointmentController.js · billController.js · labController.js · emrController.js · emrRoutes.js</div>
+    <dl>
+      <dt>Before</dt><dd>Any patient could list all patients or read anyone's lab results. <code>findByIdAndUpdate(id, req.body)</code> let callers overwrite any field. A doctor could author an EMR as another doctor.</dd>
+      <dt>Now</dt><dd>Ownership checks for patient-role reads; explicit allowlists for updates; EMR doctor derived from the token; route roles aligned with controller rules.</dd>
+      <dt>Talking point</dt><dd class="talk">"Role checks answer 'can you use this endpoint'; ownership checks answer 'can you touch this record'. You need both."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Payment integrity</h4>
+    <div class="files">paymentController.js · paymentRoutes.js · models/Bill.js</div>
+    <dl>
+      <dt>Before</dt><dd><code>billId</code> came from the client at verification, so one valid signature could mark a different bill paid. String <code>!==</code> comparison. Mode <code>'Online'</code> not in the schema enum.</dd>
+      <dt>Now</dt><dd>Order id stored on the bill at creation; verification looks the bill up by order id; <code>timingSafeEqual</code>; ownership check; idempotent; Razorpay public key returned to the client (fixes checkout not opening).</dd>
+      <dt>Talking point</dt><dd class="talk">"The server is the source of truth for which bill and how much. The client only relays Razorpay's signed proof."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Input validation and other hardening</h4>
+    <div class="files">validators/authValidators.js · middlewares/validate.js · utils/escapeRegex.js · app.js</div>
+    <dl>
+      <dt>Before</dt><dd><code>express-validator</code> installed but unused; raw user input inside <code>$regex</code>; 10 MB body limit; plain-text rate-limit responses.</dd>
+      <dt>Now</dt><dd>Rules on auth and payment routes with field-level error details; ObjectId param checks; escaped and length-capped regex input; 100 KB limit; JSON 429 responses.</dd>
+      <dt>Talking point</dt><dd class="talk">"Unescaped regex is a ReDoS and query-injection vector; I escape and cap it."</dd>
+    </dl></div>
+
+  <span class="cat">Frontend</span>
+  <div class="card"><h4>Global 401 handling and token attachment</h4>
+    <div class="files">client/src/utils/setupAxios.js · main.jsx · authSlice.js</div>
+    <dl>
+      <dt>Before</dt><dd>14 copies of <code>getToken()</code>; an expired token left the user on broken pages.</dd>
+      <dt>Now</dt><dd>One interceptor attaches the token and logs out on 401 (except on the login call itself). Validation details surface in auth errors.</dd>
+      <dt>Talking point</dt><dd class="talk">"Auth policy is a cross-cutting client concern, so it lives in an interceptor, not in every API call."</dd>
+    </dl></div>
+
+  <div class="card"><h4>ErrorBoundary and real linting</h4>
+    <div class="files">components/common/ErrorBoundary.jsx · .eslintrc.cjs · constants/theme.js</div>
+    <dl>
+      <dt>Before</dt><dd>Any render error blanked the whole app; lint reported 247 errors, so nobody ran it.</dd>
+      <dt>Now</dt><dd>A fallback screen with reload; 0 lint errors (18 warnings), plus a real bug fixed (a duplicate object key).</dd>
+      <dt>Talking point</dt><dd class="talk">"A linter that always fails is ignored. I made it pass, so CI can enforce it."</dd>
+    </dl></div>
+
+  <span class="cat">UX &amp; Design</span>
+  <div class="card"><h4>Design tokens and one visual language</h4>
+    <div class="files">client/src/index.css · index.html · App.css (deleted) · 5 files with font @imports removed</div>
+    <dl>
+      <dt>Before</dt><dd>Login and dashboards used DM Sans with one navy; other pages used Arial with another. Fonts imported separately per component.</dd>
+      <dt>Now</dt><dd>CSS variables for color, spacing, radius and shadow; shared <code>.btn</code>, <code>.surface</code>, <code>.page</code> classes; fonts loaded once with preconnect.</dd>
+      <dt>Talking point</dt><dd class="talk">"Tokens first, components second: change the palette in one file and every screen follows."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Navigation rewrite</h4>
+    <div class="files">components/Navbar.jsx · Navbar.css</div>
+    <dl>
+      <dt>Before</dt><dd>Showed <code>undefined - admin</code> after refresh; no active state; overflowed on mobile; several pages unreachable from the menu.</dd>
+      <dt>Now</dt><dd>Active-link indicator; hamburger menu under 1024px; avatar menu with profile and sign-out; complete per-role links; name loaded after refresh; Escape closes menus.</dd>
+      <dt>Talking point</dt><dd class="talk">"Navigation is the most-used UI in the app, so I fixed discoverability and mobile first."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Shared page layout, states and feedback</h4>
+    <div class="files">PageLayout.jsx · TableSkeleton.jsx · EmptyState.jsx · Toast.jsx · StatusPage.jsx · NotFoundPage.jsx · 7 pages · PatientList.jsx · PaymentModal.jsx</div>
+    <dl>
+      <dt>Before</dt><dd>Each page re-implemented its header inline; "⟳ Loading..." text; bare-text empty states; a plain <code>&lt;h1&gt;</code> 403 page; blank screen for unknown URLs; <code>alert()</code> for payment results.</dd>
+      <dt>Now</dt><dd>One layout with a <code>main</code> landmark; skeleton rows; empty states with a next action; branded 403/404 with a way back; non-blocking toasts.</dd>
+      <dt>Talking point</dt><dd class="talk">"Every async screen has four states (loading, empty, error, success), and I designed all four."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Accessibility pass</h4>
+    <div class="files">index.css · Navbar.jsx · NotificationBell.jsx · LoginPage.jsx · PatientList.jsx</div>
+    <dl>
+      <dt>Before</dt><dd>No skip link or focus ring; the notification bell was a clickable <code>div</code>; unlabeled inputs; tables without header scope.</dd>
+      <dt>Now</dt><dd>Skip link, <code>:focus-visible</code> ring, reduced-motion support, keyboard-operable bell and notifications, labelled inputs, error association, table captions and scopes, show/hide password.</dd>
+      <dt>Talking point</dt><dd class="talk">"In healthcare, accessibility is often a legal requirement, so I treated keyboard and screen-reader use as features."</dd>
+    </dl></div>
+
+  <span class="cat">Testing</span>
+  <div class="card"><h4>Backend unit and API tests</h4>
+    <div class="files">backend/__tests__/api.test.js · unit.test.js · package.json</div>
+    <dl>
+      <dt>Before</dt><dd><code>"test": "echo Error: no test specified && exit 1"</code>.</dd>
+      <dt>Now</dt><dd>21 Jest + Supertest tests: health, 404, malformed JSON, validation, role escalation, duplicate→409, generic login error, missing/tampered token, deactivated user, RBAC, ObjectId check, forged signature, bill lookup by order id, error mapping, regex escaping, algorithm pinning.</dd>
+      <dt>Talking point</dt><dd class="talk">"Each security fix has a regression test, so it can't silently come back."</dd>
+    </dl></div>
+
+  <div class="card"><h4>Client tests</h4>
+    <div class="files">client/tests/setupAxios.test.mjs · client/package.json</div>
+    <dl>
+      <dt>Now</dt><dd>Interceptor tests (token attached, logout on 401, no logout on failed login) alongside the existing auth-slice tests: 9 total.</dd>
+    </dl></div>
+
+  <span class="cat">CI/CD</span>
+  <div class="card"><h4>GitHub Actions pipeline</h4>
+    <div class="files">.github/workflows/ci.yml · root package.json</div>
+    <dl>
+      <dt>Before</dt><dd>No CI. Root <code>lint</code> was <code>echo 'Linting...'</code>; obsolete conflicting cucumber packages.</dd>
+      <dt>Now</dt><dd>On push and PR: backend tests and audit; client lint, test and build; then Docker image builds. Root scripts delegate to real commands.</dd>
+      <dt>Talking point</dt><dd class="talk">"Nothing merges unless tests, lint and build pass on a clean machine."</dd>
+    </dl></div>
+
+  <span class="cat">DevOps</span>
+  <div class="card"><h4>Docker and Compose</h4>
+    <div class="files">backend/Dockerfile · client/Dockerfile · .dockerignore × 2 · docker-compose.yml</div>
+    <dl>
+      <dt>Now</dt><dd>API: multi-stage, production dependencies only, non-root user, HEALTHCHECK. Web: Vite build served by nginx with SPA fallback. Compose: Mongo + API + web, API waits for a healthy Mongo, <code>JWT_SECRET</code> required.</dd>
+      <dt>Caveat</dt><dd>Written, not yet run end to end. Run <code>docker compose up --build</code> before claiming it in an interview.</dd>
+      <dt>Talking point</dt><dd class="talk">"One command brings up the full stack with the same setup as CI."</dd>
+    </dl></div>
+
+  <span class="cat">Production readiness</span>
+  <div class="card"><h4>Operational safety and documentation</h4>
+    <div class="files">server.js · config/env.js · README.md</div>
+    <dl>
+      <dt>Now</dt><dd>Fail-fast env validation (32+ char <code>JWT_SECRET</code>); unhandled-rejection logging; shutdown timeout; no hard-coded production CORS fallback; README with architecture diagram, setup, design decisions, security notes and known gaps.</dd>
+      <dt>Talking point</dt><dd class="talk">"A misconfigured deploy fails loudly at boot, not quietly at the first login."</dd>
+    </dl></div>
+</section>
+
+<!-- ============================ 3. BEFORE / AFTER ============================ -->
+<section class="page-break" id="beforeafter">
+  <h1 class="section">3 · Before vs After</h1>
+
+  <h3>1. Who decides the role?</h3>
+  <div class="ba">
+    <div class="b"><h5>Before</h5><pre>const { role, ... } = req.body;
+User.create({ ..., role: role || 'patient' });</pre></div>
+    <div class="a"><h5>After</h5><pre><span class="c">// public sign-up</span>
+createAccount(req.body, 'patient');
+<span class="c">// admin-only route</span>
+router.post('/staff-accounts', protect,
+  authorize('admin'), staffAccountRules, validate, ...)</pre></div>
+  </div>
+  <div class="benefits"><span>security</span><span>clear trust boundary</span></div>
+
+  <h3>2. Error handling</h3>
+  <div class="ba">
+    <div class="b"><h5>Before (×~70 handlers)</h5><pre>} catch (error) {
+  res.status(500).json({ message: error.message });
+}</pre></div>
+    <div class="a"><h5>After</h5><pre>} catch (error) { next(error); }
+<span class="c">// errorMiddleware.js</span>
+CastError → 400 · ValidationError → 400
+11000 → 409 · JWT → 401 · 5xx hidden in prod</pre></div>
+  </div>
+  <div class="benefits"><span>security</span><span>consistency</span><span>readability</span></div>
+
+  <h3>3. Updating a record</h3>
+  <div class="ba">
+    <div class="b"><h5>Before</h5><pre>Patient.findByIdAndUpdate(id, req.body, { new: true })</pre></div>
+    <div class="a"><h5>After</h5><pre>const updates = pick(req.body, PATIENT_EDITABLE_FIELDS);
+Patient.findByIdAndUpdate(id, { $set: updates },
+  { new: true, runValidators: true })</pre></div>
+  </div>
+  <div class="benefits"><span>security</span><span>data integrity</span></div>
+
+  <h3>4. Verifying a payment</h3>
+  <div class="ba">
+    <div class="b"><h5>Before</h5><pre>if (expected !== razorpay_signature) ...
+Bill.findByIdAndUpdate(req.body.billId,
+  { paymentStatus: 'Paid' })</pre></div>
+    <div class="a"><h5>After</h5><pre>if (!timingSafeEqual(expected, sig)) throw 400
+const bill = await Bill.findOne(
+  { razorpayOrderId: razorpay_order_id });
+assertCanPay(bill, req.user);
+if (bill.paymentStatus !== 'Paid') { ...save }</pre></div>
+  </div>
+  <div class="benefits"><span>security</span><span>idempotency</span><span>correctness</span></div>
+
+  <h3>5. Authenticating a request</h3>
+  <div class="ba">
+    <div class="b"><h5>Before</h5><pre>req.user = jwt.verify(token, SECRET);
+<span class="c">// role trusted for 24h, any algorithm</span></pre></div>
+    <div class="a"><h5>After</h5><pre>const decoded = verifyToken(token); <span class="c">// HS256 only</span>
+const user = await User.findById(decoded.id)
+  .select('role isActive').lean();
+if (!user?.isActive) throw new AppError(..., 401);</pre></div>
+  </div>
+  <div class="benefits"><span>security</span><span>revocation</span></div>
+
+  <h3>6. Searching across a reference</h3>
+  <div class="ba">
+    <div class="b"><h5>Before</h5><pre>{ 'userId.name': { $regex: search } } <span class="c">// never matches</span>
+<span class="c">// appointments: filter after .limit()</span></pre></div>
+    <div class="a"><h5>After</h5><pre>const users = await User.find({ name: rx });
+filter.userId = { $in: users.map(u => u._id) };
+<span class="c">// rx = escaped, capped input</span></pre></div>
+  </div>
+  <div class="benefits"><span>correctness</span><span>scalability</span><span>security</span></div>
+
+  <h3>7. Starting the server</h3>
+  <div class="ba">
+    <div class="b"><h5>Before</h5><pre>connectDB();       <span class="c">// not awaited</span>
+app.listen(PORT);</pre></div>
+    <div class="a"><h5>After</h5><pre>validateEnv();
+await connectDB();
+const server = app.listen(PORT);
+on SIGTERM → server.close → mongoose.disconnect</pre></div>
+  </div>
+  <div class="benefits"><span>reliability</span><span>testability</span></div>
+
+  <h3>8. UI shell and states</h3>
+  <div class="ba">
+    <div class="b"><h5>Before</h5><pre>&lt;Navbar /&gt;
+&lt;div style={{ padding: '30px' }}&gt;
+  &lt;h2 style={{ color: '#2c3e50' }}&gt;Patients&lt;/h2&gt;
+  {isLoading &amp;&amp; '⟳ Loading patients...'}</pre></div>
+    <div class="a"><h5>After</h5><pre>&lt;PageLayout title="Patients" subtitle="..."
+  actions={&lt;button className="btn btn-primary"&gt;}&gt;
+  {isLoading &amp;&amp; &lt;TableSkeleton columns={6} /&gt;}
+  &lt;EmptyState action={&lt;Clear search /&gt;} /&gt;</pre></div>
+  </div>
+  <div class="benefits"><span>maintainability</span><span>consistency</span><span>developer experience</span></div>
+</section>
+
+<!-- ============================ 4. CHEAT SHEET ============================ -->
+<section class="page-break" id="cheatsheet">
+  <h1 class="section">4 · Interview Cheat Sheet</h1>
+
+  <div class="qa"><div class="q">What is centralized error handling?</div>
+    <p><span class="lbl">Short answer:</span> One middleware turns every thrown or forwarded error into an HTTP response, so status codes and error shape are decided in one place.</p>
+    <p><span class="lbl">How we used it:</span> Controllers call <code>next(err)</code> or throw <code>AppError</code>; <code>errorMiddleware.js</code> maps Mongoose/JWT errors and hides 5xx details in production.</p>
+    <p><span class="lbl">Why industry uses it:</span> Consistent APIs, no leaked stack traces, a single place to log and alert.</p>
+    <div class="fu">Follow-ups: Why does Express need 4 arguments for error middleware? · How do async errors reach it in Express 4 vs 5? · Operational vs programmer errors?</div></div>
+
+  <div class="qa"><div class="q">Authentication vs authorization? What is IDOR?</div>
+    <p><span class="lbl">Short answer:</span> Authentication proves who you are; authorization decides what you may do. IDOR is when changing an id in the URL gives access to someone else's record.</p>
+    <p><span class="lbl">How we used it:</span> <code>protect</code> (authn) → <code>authorize(roles)</code> (route-level authz) → ownership checks in controllers (object-level authz).</p>
+    <p><span class="lbl">Why industry uses it:</span> Broken access control is #1 in the OWASP Top 10.</p>
+    <div class="fu">Follow-ups: RBAC vs ABAC? · Where would you centralize ownership policies? · How do you test an authz matrix?</div></div>
+
+  <div class="qa"><div class="q">How does JWT authentication work, and what are its weaknesses?</div>
+    <p><span class="lbl">Short answer:</span> The server signs a token containing claims; clients send it on each request; the server verifies the signature without a session store.</p>
+    <p><span class="lbl">How we used it:</span> HS256 pinned, 1-day expiry, and a per-request user lookup so revocation works.</p>
+    <p><span class="lbl">Why industry uses it:</span> Stateless scaling across services. Weaknesses: hard to revoke, and XSS can steal tokens from <code>localStorage</code>.</p>
+    <div class="fu">Follow-ups: Refresh tokens? · httpOnly cookies vs localStorage? · What is the <code>alg: none</code> attack?</div></div>
+
+  <div class="qa"><div class="q">Why validate input, and where?</div>
+    <p><span class="lbl">Short answer:</span> Never trust the client. Validate at the API edge for good errors, and in the schema/database for integrity.</p>
+    <p><span class="lbl">How we used it:</span> express-validator chains + a <code>validate</code> middleware; ObjectId param checks; Mongoose schema rules; field allowlists against mass assignment.</p>
+    <div class="fu">Follow-ups: express-validator vs Zod vs Joi? · Validation vs sanitization? · What is mass assignment?</div></div>
+
+  <div class="qa"><div class="q">What is rate limiting?</div>
+    <p><span class="lbl">Short answer:</span> Capping requests per client per time window to stop brute force and abuse.</p>
+    <p><span class="lbl">How we used it:</span> A global limiter, plus a strict one on login and register that skips successful requests; health checks excluded.</p>
+    <div class="fu">Follow-ups: Why does an in-memory limiter break with multiple instances? (Use Redis.) · Token bucket vs fixed window? · Per-IP vs per-account?</div></div>
+
+  <div class="qa"><div class="q">What makes logging production-grade?</div>
+    <p><span class="lbl">Short answer:</span> Structured (JSON), leveled, correlated by request id, and free of secrets.</p>
+    <p><span class="lbl">How we used it:</span> pino + pino-http, a request id per request, redaction of auth headers and passwords.</p>
+    <div class="fu">Follow-ups: Logs vs metrics vs traces? · What would you alert on? · How would you ship logs to ELK / Datadog?</div></div>
+
+  <div class="qa"><div class="q">Liveness vs readiness: what is a health check?</div>
+    <p><span class="lbl">Short answer:</span> An endpoint orchestrators poll to decide whether to restart an instance or send it traffic.</p>
+    <p><span class="lbl">How we used it:</span> <code>/api/health</code> returns 503 when Mongo is down; Docker HEALTHCHECK uses it.</p>
+    <div class="fu">Follow-ups: Should liveness depend on the DB? · How does Kubernetes use each probe?</div></div>
+
+  <div class="qa"><div class="q">Unit vs integration tests? What did you mock?</div>
+    <p><span class="lbl">Short answer:</span> Unit tests check one function in isolation; integration tests check pieces working together, here the full HTTP stack.</p>
+    <p><span class="lbl">How we used it:</span> Supertest drives real routes and middleware; Mongoose models are mocked with Jest. Next step: mongodb-memory-server for real queries.</p>
+    <div class="fu">Follow-ups: The test pyramid? · Risks of over-mocking? · How do you test race conditions?</div></div>
+
+  <div class="qa"><div class="q">What is CI/CD?</div>
+    <p><span class="lbl">Short answer:</span> CI verifies every change automatically; CD ships verified changes automatically.</p>
+    <p><span class="lbl">How we used it:</span> GitHub Actions runs backend tests, client lint/test/build, then Docker builds, on every push and PR.</p>
+    <div class="fu">Follow-ups: Caching dependencies? · Branch protection? · Where do secrets live? · Blue/green vs canary?</div></div>
+
+  <div class="qa"><div class="q">Why Docker? What is a multi-stage build?</div>
+    <p><span class="lbl">Short answer:</span> Containers package the app with its runtime so it behaves the same everywhere. Multi-stage builds keep build tools out of the final image.</p>
+    <p><span class="lbl">How we used it:</span> API image with production deps only, running as a non-root user; client built then served by nginx; Compose for the full stack.</p>
+    <div class="fu">Follow-ups: Image vs container? · Why non-root? · Layer caching order? · Compose vs Kubernetes?</div></div>
+
+  <div class="qa"><div class="q">Route guards and global 401 handling on the frontend?</div>
+    <p><span class="lbl">Short answer:</span> Guards hide screens the user can't use; interceptors handle cross-cutting HTTP concerns. Neither is security; the server is.</p>
+    <p><span class="lbl">How we used it:</span> <code>PrivateRoute</code> / <code>RoleRoute</code> plus an Axios interceptor that attaches the token and logs out on 401.</p>
+    <div class="fu">Follow-ups: Why are client guards not security? · How would refresh-token rotation fit into the interceptor?</div></div>
+
+  <div class="qa"><div class="q">Why separate app.js from server.js? What is a service layer?</div>
+    <p><span class="lbl">Short answer:</span> Separating composition from runtime enables testing. A service layer holds business logic so controllers only translate HTTP.</p>
+    <p><span class="lbl">How we used it:</span> Supertest imports <code>app.js</code>; <code>tokenService</code> is the first service. Most logic still sits in controllers, which is the next refactor.</p>
+    <div class="fu">Follow-ups: Controller vs service vs repository? · How does dependency injection help testing?</div></div>
+
+  <div class="qa"><div class="q">How do you prevent a race condition like double-booking?</div>
+    <p><span class="lbl">Short answer:</span> Enforce the invariant atomically in the database (unique constraint or transaction), not with a read-then-write in code.</p>
+    <p><span class="lbl">How we used it:</span> A partial unique index on doctor, date and time for scheduled appointments; duplicate key → 409.</p>
+    <div class="fu">Follow-ups: What is a partial index? · When do you need a MongoDB transaction? · Optimistic locking?</div></div>
+
+  <div class="qa"><div class="q">What is idempotency, and why does it matter for payments?</div>
+    <p><span class="lbl">Short answer:</span> Repeating an operation has the same effect as doing it once. Networks retry; payments must not double-apply.</p>
+    <p><span class="lbl">How we used it:</span> Verifying an already-paid bill returns success without changes; the bill is found by stored order id.</p>
+    <div class="fu">Follow-ups: Idempotency keys? · Why use webhooks as well as client callbacks? · What is a timing attack?</div></div>
+
+  <div class="qa"><div class="q">What is a design system, and how does accessibility fit?</div>
+    <p><span class="lbl">Short answer:</span> Shared tokens and components that make UI consistent by default. Accessibility is built into those components, not added per page.</p>
+    <p><span class="lbl">How we used it:</span> CSS variables, <code>.btn</code>/<code>.surface</code>, PageLayout, skeleton, empty state, toasts; skip link, focus ring, keyboard-operable controls.</p>
+    <div class="fu">Follow-ups: What is WCAG AA contrast? · How do you test with a screen reader? · Tokens vs component library?</div></div>
+</section>
+
+<!-- ============================ 5. ROADMAP ============================ -->
+<section class="page-break" id="roadmap">
+  <h1 class="section">5 · Learning Roadmap</h1>
+  <p>Not lessons, just enough to make you curious. Suggested order: <b>Validation → Error middleware → JWT &amp; refresh tokens →
+  Testing → GitHub Actions → Docker → Service layer → React Query → Redis</b>.</p>
+  <div class="callout small">
+    <b>About resources:</b> official docs are linked by name and URL. For YouTube and courses, the channel or author is named
+    so you can search for the current version rather than follow a link that may have moved.
+  </div>
+
+  <div class="grid2">
+  <div class="learn"><h4>API Validation <span class="lvl b">Beginner</span></h4>
+    <div class="row"><b>What:</b> Declarative rules that reject malformed input before business logic runs.</div>
+    <div class="row"><b>Why it's cool:</b> One schema can validate, type your code (Zod), and generate API docs.</div>
+    <div class="row"><b>Here:</b> Stopped the admin-registration exploit and ObjectId 500s.</div>
+    <div class="row"><b>Industry:</b> Every public API: Stripe, GitHub, Shopify.</div>
+    <div class="row"><b>Learn next:</b> Zod schemas · schema-to-OpenAPI · validation vs sanitization</div>
+    <div class="res">Docs: express-validator.github.io · zod.dev · OWASP Input Validation Cheat Sheet · Time: 1 week</div></div>
+
+  <div class="learn"><h4>Error Middleware <span class="lvl b">Beginner</span></h4>
+    <div class="row"><b>What:</b> A 4-argument Express middleware that turns errors into responses.</div>
+    <div class="row"><b>Why it's cool:</b> Deletes hundreds of lines of try/catch boilerplate.</div>
+    <div class="row"><b>Here:</b> Made the unreachable global handler the single error path.</div>
+    <div class="row"><b>Industry:</b> Every Express, Nest or Fastify service.</div>
+    <div class="row"><b>Learn next:</b> Express 5 async errors · RFC 9457 problem details · error monitoring (Sentry)</div>
+    <div class="res">Docs: expressjs.com/en/guide/error-handling.html · Time: 2-3 days</div></div>
+
+  <div class="learn"><h4>JWT Authentication <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> Signed, self-contained tokens that prove identity without a session store.</div>
+    <div class="row"><b>Why it's cool:</b> Paste a token into jwt.io and see your own claims, then learn why <code>alg: none</code> was a real exploit.</div>
+    <div class="row"><b>Here:</b> Pinned algorithm, generic login errors, live user check.</div>
+    <div class="row"><b>Industry:</b> Auth0, Firebase, AWS Cognito, most SPAs.</div>
+    <div class="row"><b>Learn next:</b> claims (exp, iat, aud) · HS256 vs RS256 · JWKS · storage trade-offs</div>
+    <div class="res">Docs: jwt.io/introduction · OWASP JWT Cheat Sheet · Time: 1 week</div></div>
+
+  <div class="learn"><h4>Refresh Tokens <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> Short-lived access tokens plus a long-lived refresh token in an httpOnly cookie.</div>
+    <div class="row"><b>Why it's cool:</b> Rotation detects stolen tokens; it's how Google keeps you signed in safely.</div>
+    <div class="row"><b>Here:</b> The next fix: move the token out of <code>localStorage</code> and plug refresh into the interceptor.</div>
+    <div class="row"><b>Industry:</b> OAuth 2.0 everywhere.</div>
+    <div class="row"><b>Learn next:</b> rotation and reuse detection · SameSite cookies · CSRF</div>
+    <div class="res">Docs: auth0.com/docs (refresh token rotation) · OAuth 2.0 RFC 6749 · Time: 1 week</div></div>
+
+  <div class="learn"><h4>Unit Testing <span class="lvl b">Beginner</span></h4>
+    <div class="row"><b>What:</b> Fast tests of one function or module in isolation.</div>
+    <div class="row"><b>Why it's cool:</b> Refactor fearlessly; a red test tells you exactly what broke.</div>
+    <div class="row"><b>Here:</b> Error mapping, regex escaping, token algorithm pinning.</div>
+    <div class="row"><b>Industry:</b> A merge requirement at most product companies.</div>
+    <div class="row"><b>Learn next:</b> mocks vs stubs vs spies · coverage · TDD</div>
+    <div class="res">Docs: jestjs.io · Blog: Martin Fowler, "The Practical Test Pyramid" · Course: Kent C. Dodds, Testing JavaScript · Time: 1-2 weeks</div></div>
+
+  <div class="learn"><h4>Integration Testing <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> Tests that exercise real HTTP, middleware and (ideally) a real database.</div>
+    <div class="row"><b>Why it's cool:</b> Catches the bugs unit tests can't, like the search query that never matched.</div>
+    <div class="row"><b>Here:</b> 15+ Supertest tests through the full middleware stack.</div>
+    <div class="row"><b>Industry:</b> API contract tests in every backend team.</div>
+    <div class="row"><b>Learn next:</b> mongodb-memory-server · Testcontainers · fixtures and factories</div>
+    <div class="res">Docs: github.com/ladjs/supertest · Time: 1 week</div></div>
+
+  <div class="learn"><h4>GitHub Actions / CI/CD <span class="lvl b">Beginner</span></h4>
+    <div class="row"><b>What:</b> YAML workflows that run on every push or PR.</div>
+    <div class="row"><b>Why it's cool:</b> Free automation: tests, deploys, even dependency updates.</div>
+    <div class="row"><b>Here:</b> Test → lint → build → Docker on every change.</div>
+    <div class="row"><b>Industry:</b> GitHub Actions, GitLab CI, Jenkins, CircleCI.</div>
+    <div class="row"><b>Learn next:</b> matrix builds · caching · environments and secrets · deploy jobs · branch protection</div>
+    <div class="res">Docs: docs.github.com/actions · Blog: Martin Fowler, "Continuous Integration" · Time: 3-5 days</div></div>
+
+  <div class="learn"><h4>Docker <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> Package an app and its runtime into an image that runs identically anywhere.</div>
+    <div class="row"><b>Why it's cool:</b> <code>docker compose up</code> and a new teammate is running in minutes.</div>
+    <div class="row"><b>Here:</b> Multi-stage images, non-root user, health checks, Compose stack.</div>
+    <div class="row"><b>Industry:</b> The unit of deployment for Kubernetes, ECS and Cloud Run.</div>
+    <div class="row"><b>Learn next:</b> layer caching · image size · volumes and networks · Kubernetes basics</div>
+    <div class="res">Docs: docs.docker.com · YouTube: TechWorld with Nana (Docker tutorial) · Time: 1-2 weeks</div></div>
+
+  <div class="learn"><h4>Service Layer Pattern <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> Business logic in plain modules; controllers only translate HTTP.</div>
+    <div class="row"><b>Why it's cool:</b> The same logic can serve REST, a queue worker or a CLI.</div>
+    <div class="row"><b>Here:</b> <code>tokenService</code> is step one; appointments and billing are next.</div>
+    <div class="row"><b>Industry:</b> NestJS, Spring and .NET all build on this.</div>
+    <div class="row"><b>Learn next:</b> thin controllers · domain errors · transactions in services</div>
+    <div class="res">Blog: martinfowler.com/eaaCatalog/serviceLayer.html · Time: 1 week</div></div>
+
+  <div class="learn"><h4>Repository Pattern <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> An interface over data access, so services don't call Mongoose directly.</div>
+    <div class="row"><b>Why it's cool:</b> Swap Mongo for an in-memory fake in tests, with zero mocking libraries.</div>
+    <div class="row"><b>Here:</b> Would replace the <code>jest.mock('../models/...')</code> approach.</div>
+    <div class="row"><b>Industry:</b> Domain-driven design and clean architecture codebases.</div>
+    <div class="row"><b>Learn next:</b> clean / hexagonal architecture · unit of work</div>
+    <div class="res">Blog: martinfowler.com/eaaCatalog/repository.html · Time: 3-5 days</div></div>
+
+  <div class="learn"><h4>Dependency Injection <span class="lvl a">Advanced</span></h4>
+    <div class="row"><b>What:</b> Pass dependencies in, rather than <code>require</code>-ing them inside.</div>
+    <div class="row"><b>Why it's cool:</b> The secret behind easily testable frameworks like NestJS and Angular.</div>
+    <div class="row"><b>Here:</b> Would let tests inject a fake Razorpay client instead of patching modules.</div>
+    <div class="row"><b>Industry:</b> Spring, .NET, NestJS, Angular.</div>
+    <div class="row"><b>Learn next:</b> factory functions · IoC containers · composition root</div>
+    <div class="res">Blog: martinfowler.com/articles/injection.html · Docs: docs.nestjs.com/providers · Time: 1 week</div></div>
+
+  <div class="learn"><h4>Rate Limiting <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> Bounding how often a client can call you.</div>
+    <div class="row"><b>Why it's cool:</b> The algorithms (token bucket, sliding window) are classic system-design interview material.</div>
+    <div class="row"><b>Here:</b> Global and auth limiters with JSON 429s.</div>
+    <div class="row"><b>Industry:</b> Every public API; Cloudflare and API gateways.</div>
+    <div class="row"><b>Learn next:</b> algorithms · distributed limits with Redis · per-user quotas</div>
+    <div class="res">Docs: express-rate-limit (npm) · Blog: Cloudflare and Stripe engineering blogs on rate limiting · Time: 3-5 days</div></div>
+
+  <div class="learn"><h4>Redis &amp; Caching <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> An in-memory data store for caches, sessions, rate limits and queues.</div>
+    <div class="row"><b>Why it's cool:</b> Sub-millisecond reads; one tool unlocks five features.</div>
+    <div class="row"><b>Here:</b> Needed for a shared rate limiter across instances, and to cache the per-request user lookup.</div>
+    <div class="row"><b>Industry:</b> Twitter/X timelines, GitHub, almost every high-traffic backend.</div>
+    <div class="row"><b>Learn next:</b> cache-aside · TTL and invalidation · pub/sub · BullMQ queues</div>
+    <div class="res">Docs: redis.io/docs · Free course: Redis University · Time: 1-2 weeks</div></div>
+
+  <div class="learn"><h4>Logging &amp; Monitoring <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> Logs, metrics and traces: the three pillars of observability.</div>
+    <div class="row"><b>Why it's cool:</b> Find a production bug from a dashboard instead of guessing.</div>
+    <div class="row"><b>Here:</b> pino structured logs with request ids and redaction.</div>
+    <div class="row"><b>Industry:</b> Datadog, Grafana, New Relic, OpenTelemetry.</div>
+    <div class="row"><b>Learn next:</b> OpenTelemetry · Prometheus metrics · SLOs and alerts · Sentry</div>
+    <div class="res">Docs: getpino.io · opentelemetry.io/docs · Book: Google SRE Book (sre.google, free online) · Time: 2 weeks</div></div>
+
+  <div class="learn"><h4>React Query (TanStack Query) <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> A library for server state: fetching, caching, retries, invalidation.</div>
+    <div class="row"><b>Why it's cool:</b> It could delete most of the 14 Redux slices and the <code>?all=true</code> workaround.</div>
+    <div class="row"><b>Here:</b> The natural next frontend refactor.</div>
+    <div class="row"><b>Industry:</b> The default for server state in modern React apps.</div>
+    <div class="row"><b>Learn next:</b> query keys · mutations and invalidation · optimistic updates · RTK Query comparison</div>
+    <div class="res">Docs: tanstack.com/query · Blog: TkDodo's blog (React Query maintainer) · Time: 1 week</div></div>
+
+  <div class="learn"><h4>Design Systems <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> Tokens + components + guidelines that make UI consistent by default.</div>
+    <div class="row"><b>Why it's cool:</b> Lets small teams ship polished UI fast, the way Stripe and Linear do.</div>
+    <div class="row"><b>Here:</b> CSS tokens, shared buttons and surfaces, PageLayout, state components.</div>
+    <div class="row"><b>Industry:</b> Material, Atlassian Design System, Primer (GitHub), Polaris (Shopify).</div>
+    <div class="row"><b>Learn next:</b> component APIs · theming and dark mode · Storybook · headless UI (Radix)</div>
+    <div class="res">Docs: atlassian.design · primer.style · storybook.js.org · Time: 2 weeks</div></div>
+
+  <div class="learn"><h4>Accessibility (a11y) <span class="lvl b">Beginner</span></h4>
+    <div class="row"><b>What:</b> Making UI usable by keyboard, screen readers and people with low vision.</div>
+    <div class="row"><b>Why it's cool:</b> Try using your app with only Tab and Enter; it changes how you build.</div>
+    <div class="row"><b>Here:</b> Skip link, focus ring, keyboard-operable bell, labelled forms, table semantics.</div>
+    <div class="row"><b>Industry:</b> Legally required in healthcare and government; part of FAANG front-end interviews.</div>
+    <div class="row"><b>Learn next:</b> WCAG 2.2 AA · ARIA patterns · focus management in modals · axe and Lighthouse</div>
+    <div class="res">Docs: web.dev/learn/accessibility · w3.org/WAI/ARIA/apg · Time: 1-2 weeks</div></div>
+
+  <div class="learn"><h4>Database Indexing &amp; Constraints <span class="lvl i">Intermediate</span></h4>
+    <div class="row"><b>What:</b> Data structures that make queries fast and rules the DB enforces atomically.</div>
+    <div class="row"><b>Why it's cool:</b> One index can turn a 2-second query into 2 ms, and one constraint can remove a race condition.</div>
+    <div class="row"><b>Here:</b> Compound indexes; partial unique index for booking.</div>
+    <div class="row"><b>Industry:</b> Daily work for every backend engineer.</div>
+    <div class="row"><b>Learn next:</b> <code>explain()</code> · ESR rule · transactions · text and Atlas Search</div>
+    <div class="res">Docs: mongodb.com/docs/manual/indexes · Free course: MongoDB University · Time: 1-2 weeks</div></div>
+  </div>
+</section>
+
+<!-- ============================ 6. RECRUITER ============================ -->
+<section class="page-break" id="recruiter">
+  <h1 class="section">6 · Recruiter View</h1>
+  <div class="grid2">
+    <div class="callout warn" style="margin:0"><b>Before: concerns</b>
+      <ul class="small" style="margin-top:6px">
+        <li>Anyone could self-register as admin</li>
+        <li>Patients could read other patients' data</li>
+        <li>Payment could be replayed onto another bill</li>
+        <li>No tests; <code>npm test</code> exited with an error</li>
+        <li>Fake lint script; no CI; no Docker</li>
+        <li>No validation despite the library being installed</li>
+        <li>No production logging</li>
+        <li>Search features that could never work</li>
+        <li>Inconsistent UI; dead-end error screens</li>
+        <li>~20 auto-generated "COMPLETE" reports overstating quality</li>
+      </ul></div>
+    <div class="callout good" style="margin:0"><b>After: resolved</b>
+      <ul class="small" style="margin-top:6px">
+        <li>Role assigned server-side; admin-only staff provisioning</li>
+        <li>Ownership checks and field allowlists</li>
+        <li>Order-bound, idempotent, timing-safe payments</li>
+        <li>30 automated tests, including security regressions</li>
+        <li>Real lint, CI pipeline, Dockerfiles and Compose</li>
+        <li>Validation on auth/payment plus schema rules</li>
+        <li>Structured logs with request ids</li>
+        <li>Working search before pagination</li>
+        <li>Shared design system, accessible navigation, 403/404</li>
+        <li><i>Still open:</i> the report files in the repo root</li>
+      </ul></div>
+  </div>
+
+  <h2>What level does the project read as now?</h2>
+  <table>
+    <thead><tr><th>Level</th><th>Fit</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td>Intern</td><td>Exceeds</td><td>Breadth alone clears this bar.</td></tr>
+      <tr><td>Junior Developer</td><td>Exceeds</td><td>Security, tests and CI are beyond typical junior portfolios.</td></tr>
+      <tr><td><b>SDE-1</b></td><td><b>Solid fit</b></td><td>Shows the fundamentals (trust boundaries, error design, testing, CI, Docker) and can explain trade-offs. This is the target level.</td></tr>
+      <tr><td>SDE-2</td><td>Partial</td><td>Missing: real-DB integration tests, a service/repository layer throughout, refresh tokens, webhooks, observability beyond logs, measured performance.</td></tr>
+      <tr><td>Senior</td><td>Not yet</td><td>Would need system-level design: scaling, multi-tenancy, audit trails for medical data, SLOs, incident readiness.</td></tr>
+    </tbody>
+  </table>
+  <div class="callout">The fastest route to SDE-2 perception: add mongodb-memory-server tests, move appointments and billing into services,
+  implement refresh tokens and a Razorpay webhook, and remove the generated report files from the repo root.</div>
+</section>
+
+<!-- ============================ 7. PORTFOLIO ============================ -->
+<section class="page-break" id="portfolio">
+  <h1 class="section">7 · Portfolio Value</h1>
+
+  <h2>Resume bullets (pick 3-4)</h2>
+  <ul>
+    <li>Built a role-based hospital management platform (React, Redux Toolkit, Express, MongoDB) serving 7 roles across 15 modules, including Razorpay payments.</li>
+    <li>Closed critical access-control flaws (privilege escalation, IDOR, mass assignment) and added regression tests for each fix.</li>
+    <li>Hardened payment verification with server-side order binding, constant-time signature checks and idempotent processing.</li>
+    <li>Introduced centralized error handling, request validation, structured logging and health checks; added Jest/Supertest suite and GitHub Actions CI.</li>
+    <li>Containerized the stack with multi-stage Docker builds and Compose; built a token-based UI system with accessible navigation and loading/empty/error states.</li>
+  </ul>
+  <p class="small muted">Only claim what you can demo and explain. Run the Docker stack before listing it.</p>
+
+  <h2>Screenshots to include</h2>
+  <table>
+    <thead><tr><th>Screen</th><th>What it proves</th></tr></thead>
+    <tbody>
+      <tr><td>Login page</td><td>First impression and form polish</td></tr>
+      <tr><td>Admin dashboard</td><td>Data-heavy UI and information hierarchy</td></tr>
+      <tr><td>Patients list: data, skeleton, empty state</td><td>You design all states, not just the happy path</td></tr>
+      <tr><td>Mobile navigation open</td><td>Responsive design</td></tr>
+      <tr><td>Payment flow (Razorpay test mode)</td><td>Third-party integration</td></tr>
+      <tr><td>Green GitHub Actions run</td><td>Engineering discipline</td></tr>
+      <tr><td>Terminal: <code>npm test</code> passing</td><td>Real tests exist</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Live demo script (5 minutes)</h2>
+  <ol>
+    <li>Register as a patient → book an appointment → try booking the same slot again (409 message).</li>
+    <li>Log in as admin → create a nurse via staff provisioning → show role-specific navigation.</li>
+    <li>Pay a bill in Razorpay test mode → toast confirmation → bill shows Paid.</li>
+    <li>Show <code>curl /api/health</code>, then a request with <code>"role":"admin"</code> at sign-up still creating a patient.</li>
+    <li>Open the CI run and one security test, and explain what it protects.</li>
+  </ol>
+
+  <h2>Architecture decisions worth discussing</h2>
+  <ul>
+    <li>Why the database enforces double-booking rather than application code.</li>
+    <li>Why the server re-reads the user on every request, and what you would cache with Redis to make it cheaper.</li>
+    <li>Why client route guards are UX, not security.</li>
+    <li>The trade-off between Redux slices and React Query for server state.</li>
+    <li>What you would change for real medical data: audit logs, encryption, soft deletes, retention.</li>
+  </ul>
+</section>
+
+<!-- ============================ 8. ASSESSMENT ============================ -->
+<section class="page-break" id="assessment">
+  <h1 class="section">8 · Final Project Assessment</h1>
+  <div class="legend"><span><i style="background:#e3a49b"></i>Before</span><span><i style="background:#2b7de9"></i>After</span></div>
+
+  <div class="bar"><span>Architecture</span><div class="track"><div class="before" style="width:50%"></div><div class="after" style="width:68%"></div></div><b>5 → 6.8</b></div>
+  <div class="bar"><span>Frontend</span><div class="track"><div class="before" style="width:55%"></div><div class="after" style="width:66%"></div></div><b>5.5 → 6.6</b></div>
+  <div class="bar"><span>Backend</span><div class="track"><div class="before" style="width:45%"></div><div class="after" style="width:70%"></div></div><b>4.5 → 7</b></div>
+  <div class="bar"><span>Testing</span><div class="track"><div class="before" style="width:20%"></div><div class="after" style="width:55%"></div></div><b>2 → 5.5</b></div>
+  <div class="bar"><span>Security</span><div class="track"><div class="before" style="width:25%"></div><div class="after" style="width:70%"></div></div><b>2.5 → 7</b></div>
+  <div class="bar"><span>Design</span><div class="track"><div class="before" style="width:40%"></div><div class="after" style="width:60%"></div></div><b>4 → 6</b></div>
+  <div class="bar"><span>Scalability</span><div class="track"><div class="before" style="width:40%"></div><div class="after" style="width:55%"></div></div><b>4 → 5.5</b></div>
+  <div class="bar"><span>Production Readiness</span><div class="track"><div class="before" style="width:25%"></div><div class="after" style="width:62%"></div></div><b>2.5 → 6.2</b></div>
+
+  <div class="grid3" style="margin:16px 0">
+    <div class="kpi"><div class="v">~4.0</div><div class="l">Overall before</div></div>
+    <div class="kpi"><div class="v" style="color:#1e8e4e">6.3 / 10</div><div class="l">Overall after</div></div>
+    <div class="kpi"><div class="v">SDE-1</div><div class="l">Level the project now reads as</div></div>
+  </div>
+
+  <h2>Honest remaining gaps</h2>
+  <table>
+    <thead><tr><th>Gap</th><th>Impact</th><th>Next step</th></tr></thead>
+    <tbody>
+      <tr><td>Validation only on auth and payment routes</td><td>Other endpoints rely on schema rules</td><td>Add rule sets per resource</td></tr>
+      <tr><td>Tests mock Mongoose</td><td>Query bugs not caught</td><td>mongodb-memory-server integration tests</td></tr>
+      <tr><td>Logic still in controllers</td><td>Harder to reuse and test</td><td>Services for appointments and billing</td></tr>
+      <tr><td>JWT in localStorage, no refresh</td><td>XSS token theft risk</td><td>httpOnly cookie + rotation</td></tr>
+      <tr><td>No Razorpay webhook</td><td>Payment lost if the tab closes</td><td>Signed webhook endpoint</td></tr>
+      <tr><td>Some searches still query populated paths</td><td>EMR, admission, review and doctor name search ineffective</td><td>Apply the resolve-ids pattern</td></tr>
+      <tr><td>In-memory rate limiter</td><td>Breaks with multiple instances</td><td>Redis store</td></tr>
+      <tr><td>Most lists, forms and dashboards still inline-styled; 14 <code>window.confirm</code> dialogs</td><td>Visual inconsistency; no dark mode</td><td>Migrate to tokens; shared table and confirm modal</td></tr>
+      <tr><td>Docker stack not yet run</td><td>Unverified claim</td><td><code>docker compose up --build</code></td></tr>
+      <tr><td>Existing mixed-case emails</td><td>Those users can't log in after lowercasing</td><td>One-off migration script</td></tr>
+      <tr><td>~20 generated report files in repo root</td><td>Recruiter red flag</td><td>Remove or move to a docs archive</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout good"><b>Bottom line.</b> The project moved from "impressive feature list, unsafe to run" to "credible SDE-1 portfolio piece with
+  clear engineering judgement". The remaining gaps are exactly the right talking points for "what would you do next?",
+  one of the most common closing interview questions.</div>
+</section>
+
+</body>
+</html>

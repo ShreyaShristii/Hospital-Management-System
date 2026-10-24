@@ -2,7 +2,7 @@ const Staff = require('../models/Staff');
 const User = require('../models/User');
 
 // Add new staff
-const addStaff = async (req, res) => {
+const addStaff = async (req, res, next) => {
   try {
     const { userId, department, position, specialization, experience, licenseNumber, qualifications, contactNumber, address } = req.body;
 
@@ -25,24 +25,24 @@ const addStaff = async (req, res) => {
 
     res.status(201).json({ message: 'Staff added successfully', staff });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Get all staff
-const getAllStaff = async (req, res) => {
+const getAllStaff = async (req, res, next) => {
   try {
     const staff = await Staff.find()
       .populate('userId', 'name email')
       .populate('department', 'name');
     res.status(200).json(staff);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Get staff by ID
-const getStaffById = async (req, res) => {
+const getStaffById = async (req, res, next) => {
   try {
     const staff = await Staff.findById(req.params.id)
       .populate('userId', 'name email')
@@ -52,24 +52,24 @@ const getStaffById = async (req, res) => {
     }
     res.status(200).json(staff);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Get staff by department
-const getStaffByDepartment = async (req, res) => {
+const getStaffByDepartment = async (req, res, next) => {
   try {
     const staff = await Staff.find({ department: req.params.departmentId })
       .populate('userId', 'name email')
       .populate('department', 'name');
     res.status(200).json(staff);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Get current logged-in user's staff profile
-const getMyStaffProfile = async (req, res) => {
+const getMyStaffProfile = async (req, res, next) => {
   try {
     const staff = await Staff.findOne({ userId: req.user.id })
       .populate('userId', 'name email')
@@ -81,12 +81,12 @@ const getMyStaffProfile = async (req, res) => {
 
     res.status(200).json(staff);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Update staff
-const updateStaff = async (req, res) => {
+const updateStaff = async (req, res, next) => {
   try {
     const { position, specialization, experience, licenseNumber, licenseExpiry, qualifications, status, contactNumber, address } = req.body;
     
@@ -121,12 +121,12 @@ const updateStaff = async (req, res) => {
 
     res.status(200).json({ message: 'Staff updated successfully', staff: updatedStaff });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Delete staff
-const deleteStaff = async (req, res) => {
+const deleteStaff = async (req, res, next) => {
   try {
     const staff = await Staff.findByIdAndDelete(req.params.id);
     if (!staff) {
@@ -134,7 +134,7 @@ const deleteStaff = async (req, res) => {
     }
     res.status(200).json({ message: 'Staff deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

@@ -1,7 +1,7 @@
 const Notification = require('../models/Notification');
 
 // Add new notification
-const addNotification = async (req, res) => {
+const addNotification = async (req, res, next) => {
   try {
     const { userId, title, message, type, priority, relatedEntity, relatedEntityId, actionUrl } = req.body;
 
@@ -18,36 +18,36 @@ const addNotification = async (req, res) => {
 
     res.status(201).json({ message: 'Notification created successfully', notification });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Get all notifications for user
-const getUserNotifications = async (req, res) => {
+const getUserNotifications = async (req, res, next) => {
   try {
     const userId = req.user.id || req.params.userId;
     const notifications = await Notification.find({ userId })
       .sort({ createdAt: -1 });
     res.status(200).json(notifications);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Get unread notifications for user
-const getUnreadNotifications = async (req, res) => {
+const getUnreadNotifications = async (req, res, next) => {
   try {
     const userId = req.user.id || req.params.userId;
     const notifications = await Notification.find({ userId, isRead: false })
       .sort({ createdAt: -1 });
     res.status(200).json(notifications);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Get notification by ID
-const getNotificationById = async (req, res) => {
+const getNotificationById = async (req, res, next) => {
   try {
     const notification = await Notification.findById(req.params.id);
     if (!notification) {
@@ -55,12 +55,12 @@ const getNotificationById = async (req, res) => {
     }
     res.status(200).json(notification);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Mark notification as read
-const markAsRead = async (req, res) => {
+const markAsRead = async (req, res, next) => {
   try {
     const notification = await Notification.findByIdAndUpdate(
       req.params.id,
@@ -77,12 +77,12 @@ const markAsRead = async (req, res) => {
 
     res.status(200).json({ message: 'Notification marked as read', notification });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Mark all notifications as read for user
-const markAllAsRead = async (req, res) => {
+const markAllAsRead = async (req, res, next) => {
   try {
     const userId = req.user.id || req.params.userId;
     const result = await Notification.updateMany(
@@ -95,12 +95,12 @@ const markAllAsRead = async (req, res) => {
 
     res.status(200).json({ message: 'All notifications marked as read', modifiedCount: result.modifiedCount });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Delete notification
-const deleteNotification = async (req, res) => {
+const deleteNotification = async (req, res, next) => {
   try {
     const notification = await Notification.findByIdAndDelete(req.params.id);
     if (!notification) {
@@ -108,18 +108,18 @@ const deleteNotification = async (req, res) => {
     }
     res.status(200).json({ message: 'Notification deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
 // Delete all notifications for user
-const deleteAllNotifications = async (req, res) => {
+const deleteAllNotifications = async (req, res, next) => {
   try {
     const userId = req.user.id || req.params.userId;
     const result = await Notification.deleteMany({ userId });
     res.status(200).json({ message: 'All notifications deleted', deletedCount: result.deletedCount });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

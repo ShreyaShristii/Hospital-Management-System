@@ -1,26 +1,21 @@
-const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const asyncHandler = require('../utils/asyncHandler');
+const AppError = require('../utils/AppError');
+const { verifyToken } = require('../services/tokenService');
 
-const protect = async (req, res, next) => {
-  try {
-    let token;
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-    
-    if (!token) {
-      return res.status(401).json({ message: 'Not authorized to access this route' });
-    }
+const protect = asyncHandler(async (req, res, next) => {
+  const header = req.headers.authorization || '';
+  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  if (!token) throw new AppError('Not authorized to access this route', 401);
 
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decoded;
-      next();
-    } catch (err) {
-      return res.status(401).json({ message: 'Not authorized to access this route' });
-    }
-  } catch (error) {
-    return res.status(401).json({ message: 'Not authorized to access this route' });
-  }
-};
+  const decoded = verifyToken(token);
+
+  // Re-read role/active state so deactivation and role changes apply immediately.
+  const user = await User.findById(decoded.id).select('role isActive').lean();
+  if (!user || !user.isActive) throw new AppError('Not authorized to access this route', 401);
+
+  req.user = { id: String(user._id), role: user.role };
+  next();
+});
 
 module.exports = { protect };

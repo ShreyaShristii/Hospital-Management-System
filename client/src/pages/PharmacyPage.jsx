@@ -16,7 +16,7 @@ function PharmacyPage() {
     if (user?.role === 'admin' || user?.role === 'pharmacist') {
       dispatch(getLowStockMedicines())
     }
-  }, [dispatch])
+  }, [dispatch, user?.role])
 
   const handleEdit = (medicine) => {
     setMedicineToEdit(medicine)

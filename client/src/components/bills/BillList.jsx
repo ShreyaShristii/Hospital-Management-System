@@ -6,7 +6,7 @@ import Pagination from '../common/Pagination'
 
 function BillList({ onEdit }) {
   const dispatch = useDispatch()
-  const { bills, isLoading, total, pages, page: currentPage, pageSize } = useSelector((state) => state.bills)
+  const { bills, isLoading, total, pages, pageSize } = useSelector((state) => state.bills)
   const { user } = useSelector((state) => state.auth)
   const [payingBill, setPayingBill] = useState(null)
   const [page, setPage] = useState(1)

@@ -5,7 +5,7 @@ import Pagination from '../common/Pagination'
 
 function DoctorList({ onEdit }) {
   const dispatch = useDispatch()
-  const { doctors, isLoading, total, pages, page: currentPage, pageSize } = useSelector((state) => state.doctors)
+  const { doctors, isLoading, total, pages, pageSize } = useSelector((state) => state.doctors)
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')

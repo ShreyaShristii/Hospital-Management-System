@@ -7,7 +7,6 @@ import { getAppointments } from '../../features/appointments/appointmentSlice'
 
 function ReviewForm({ reviewToEdit, onClose }) {
   const dispatch = useDispatch()
-  const { user } = useSelector((state) => state.auth)
   const { staff } = useSelector((state) => state.staff)
   const { doctors } = useSelector((state) => state.doctors)
   const { appointments } = useSelector((state) => state.appointments)

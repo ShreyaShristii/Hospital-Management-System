@@ -56,7 +56,7 @@ function ProfileEditForm() {
     }
 
     try {
-      const result = await dispatch(updateUserProfile(submitData)).unwrap()
+      await dispatch(updateUserProfile(submitData)).unwrap()
       setMessage('Profile updated successfully!')
       
       // Clear password fields after successful update

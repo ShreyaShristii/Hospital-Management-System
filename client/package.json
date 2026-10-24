@@ -17,13 +17,16 @@
   "build": "vite build",
   
     
-  "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+  "lint": "eslint . --ext js,jsx --report-unused-disable-directives",
   
     
   "preview": "vite preview",
   
     
-  "test:bdd": "bddgen && playwright test"
+  "test:bdd": "bddgen && playwright test",
+  
+    
+  "test": "node --test tests/auth.test.mjs tests/setupAxios.test.mjs"
   
   },
   

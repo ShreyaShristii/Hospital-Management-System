@@ -1,5 +1,3 @@
-import React from 'react';
-
 /**
  * Pagination Component
  * Displays page navigation controls

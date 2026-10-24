@@ -1,147 +1,192 @@
+import { useEffect, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate, Link } from 'react-router-dom'
-import { logout } from '../features/auth/authSlice'
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom'
+import { logout, fetchCurrentUser } from '../features/auth/authSlice'
 import NotificationBell from './notifications/NotificationBell'
+import './Navbar.css'
+
+const dashboard = { label: 'Dashboard', path: '/dashboard' }
+
+const NAV_LINKS = {
+  admin: [
+    dashboard,
+    { label: 'Patients', path: '/patients' },
+    { label: 'Doctors', path: '/doctors' },
+    { label: 'Staff', path: '/staff' },
+    { label: 'Appointments', path: '/appointments' },
+    { label: 'Admissions', path: '/admissions' },
+    { label: 'Beds', path: '/beds' },
+    { label: 'Departments', path: '/departments' },
+    { label: 'Bills', path: '/bills' },
+    { label: 'EMR', path: '/emr' },
+    { label: 'Lab Tests', path: '/lab' },
+    { label: 'Pharmacy', path: '/pharmacy' },
+    { label: 'Reviews', path: '/reviews' },
+  ],
+  doctor: [
+    dashboard,
+    { label: 'My Appointments', path: '/appointments' },
+    { label: 'Patients', path: '/patients' },
+    { label: 'EMR', path: '/emr' },
+    { label: 'Lab Requests', path: '/lab' },
+    { label: 'Pharmacy', path: '/pharmacy' },
+    { label: 'My Reviews', path: '/reviews' },
+  ],
+  patient: [
+    dashboard,
+    { label: 'Book Appointment', path: '/appointments' },
+    { label: 'My EMR', path: '/emr' },
+    { label: 'Lab Results', path: '/lab' },
+    { label: 'My Bills', path: '/bills' },
+    { label: 'Reviews', path: '/reviews' },
+  ],
+  receptionist: [
+    dashboard,
+    { label: 'Patients', path: '/patients' },
+    { label: 'Doctors', path: '/doctors' },
+    { label: 'Appointments', path: '/appointments' },
+    { label: 'Bills', path: '/bills' },
+    { label: 'Admissions', path: '/admissions' },
+    { label: 'Beds', path: '/beds' },
+  ],
+  nurse: [
+    dashboard,
+    { label: 'Patients', path: '/patients' },
+    { label: 'Admissions', path: '/admissions' },
+    { label: 'Lab Tests', path: '/lab' },
+    { label: 'Pharmacy', path: '/pharmacy' },
+  ],
+  lab_staff: [dashboard, { label: 'Lab Tests', path: '/lab' }],
+  pharmacist: [dashboard, { label: 'Pharmacy', path: '/pharmacy' }],
+}
+
+const PROFILE_PATH = {
+  patient: '/patient-profile',
+  doctor: '/doctor-profile',
+  receptionist: '/staff-profile',
+  nurse: '/staff-profile',
+  lab_staff: '/staff-profile',
+  pharmacist: '/staff-profile',
+}
+
+const roleLabel = (role) => (role || '').replace('_', ' ').replace(/^\w/, (c) => c.toUpperCase())
+const initials = (name) =>
+  (name || '?').split(' ').filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('')
 
 function Navbar() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useSelector((state) => state.auth)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef(null)
+
+  // The token only carries id and role; load the display name once.
+  useEffect(() => {
+    if (user && !user.name) dispatch(fetchCurrentUser())
+  }, [dispatch, user])
+
+  useEffect(() => {
+    setMenuOpen(false)
+    setUserMenuOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    const onPointerDown = (e) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false)
+    }
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setUserMenuOpen(false)
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onPointerDown)
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown)
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [])
 
   const handleLogout = () => {
     dispatch(logout())
     navigate('/login')
   }
 
-  const navLinks = {
-    admin: [
-      { label: 'Dashboard', path: '/dashboard' },
-      { label: 'Patients', path: '/patients' },
-      { label: 'Doctors', path: '/doctors' },
-      { label: 'Staff', path: '/staff' },
-      { label: 'Appointments', path: '/appointments' },
-      { label: 'Departments', path: '/departments' },
-      { label: 'Beds', path: '/beds' },
-      { label: 'Bills', path: '/bills' },
-      { label: 'EMR', path: '/emr' },
-      { label: 'Lab Tests', path: '/lab' },
-
-    ],
-    doctor: [
-      { label: 'Dashboard', path: '/dashboard' },
-      { label: 'My Appointments', path: '/appointments' },
-      { label: 'Patients', path: '/patients' },
-      { label: 'EMR', path: '/emr' },
-      { label: 'Lab Requests', path: '/lab' },
-      
-{ label: 'My Reviews', path: '/reviews' },
-    ],
-    patient: [
-      { label: 'Dashboard', path: '/dashboard' },
-      { label: 'Book Appointment', path: '/appointments' },
-      { label: 'My EMR', path: '/emr' },
-      { label: 'Lab Results', path: '/lab' },
-      { label: 'My Bills', path: '/bills' },
-{ label: 'Reviews', path: '/reviews' },
-
-    ],
-    receptionist: [
-      { label: 'Dashboard', path: '/dashboard' },
-      { label: 'Patients', path: '/patients' },
-      { label: 'Appointments', path: '/appointments' },
-      { label: 'Bills', path: '/bills' },
-      { label: 'Admissions', path: '/admissions' },
-      { label: 'Beds', path: '/beds' },
-    ],
-    nurse: [
-      { label: 'Dashboard', path: '/dashboard' },
-      { label: 'Patients', path: '/patients' },
-      { label: 'Admissions', path: '/admissions' },
-    ],
-    lab_staff: [
-      { label: 'Dashboard', path: '/dashboard' },
-      { label: 'Lab Tests', path: '/lab' },
-    ],
-    pharmacist: [
-      { label: 'Dashboard', path: '/dashboard' },
-      { label: 'Pharmacy', path: '/pharmacy' },
-    ],
-  }
-
-  const links = navLinks[user?.role] || []
+  const links = NAV_LINKS[user?.role] || []
+  const profilePath = PROFILE_PATH[user?.role] || '/profile'
 
   return (
-    <nav style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '0 24px',
-      background: '#2c3e50',
-      color: 'white',
-      height: '60px',
-      position: 'sticky',
-      top: 0,
-      zIndex: 999,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
-    }}>
-      {/* Left — Logo */}
-      <Link to="/dashboard" style={{
-        color: 'white', textDecoration: 'none',
-        fontSize: '20px', fontWeight: '700',
-        letterSpacing: '1px'
-      }}>
-        HMS
-      </Link>
-
-      {/* Middle — Nav Links */}
-      <div style={{ display: 'flex', gap: '4px' }}>
-        {links.map((link) => (
-          <Link
-            key={link.path}
-            to={link.path}
-            style={{
-              color: 'rgba(255,255,255,0.85)',
-              textDecoration: 'none',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              fontSize: '14px',
-              transition: 'background 0.2s',
-            }}
-            onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseLeave={e => e.target.style.background = 'transparent'}
-          >
-            {link.label}
+    <>
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+      <header className="app-nav">
+        <div className="app-nav-inner">
+          <Link to="/dashboard" className="app-nav-brand" aria-label="HMS home">
+            <span className="app-nav-logo" aria-hidden="true">H</span>
+            <span className="app-nav-brand-text">HMS</span>
           </Link>
-        ))}
-      </div>
 
-      {/* Right — User info + Logout */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        {user && (
-          <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.85)' }}>
-            {user.name} - <span style={{
-              background: 'rgba(255,255,255,0.15)',
-              padding: '2px 8px',
-              borderRadius: '10px',
-              fontSize: '12px'
-            }}>{user.role}</span>
-          </span>
-        )}
-        <NotificationBell />
-        <button onClick={handleLogout} style={{
-          padding: '6px 16px',
-          background: '#e74c3c',
-          color: 'white',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          fontSize: '14px',
-          fontWeight: '500'
-        }}>
-          Logout
-        </button>
-      </div>
-    </nav>
+          <nav
+            id="primary-navigation"
+            aria-label="Primary"
+            className={`app-nav-links ${menuOpen ? 'is-open' : ''}`}
+          >
+            {links.map((link) => (
+              <NavLink
+                key={link.path}
+                to={link.path}
+                className={({ isActive }) => `app-nav-link ${isActive ? 'is-active' : ''}`}
+              >
+                {link.label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="app-nav-actions">
+            <NotificationBell />
+
+            <div className="app-nav-user" ref={userMenuRef}>
+              <button
+                type="button"
+                className="app-nav-user-btn"
+                aria-haspopup="menu"
+                aria-expanded={userMenuOpen}
+                onClick={() => setUserMenuOpen((o) => !o)}
+              >
+                <span className="app-nav-avatar" aria-hidden="true">{initials(user?.name)}</span>
+                <span className="app-nav-user-text">
+                  <span className="app-nav-user-name">{user?.name || 'Account'}</span>
+                  <span className="app-nav-user-role">{roleLabel(user?.role)}</span>
+                </span>
+              </button>
+
+              {userMenuOpen && (
+                <div className="app-nav-menu" role="menu">
+                  <Link role="menuitem" to={profilePath} className="app-nav-menu-item">My profile</Link>
+                  <Link role="menuitem" to="/profile" className="app-nav-menu-item">Account &amp; password</Link>
+                  <button role="menuitem" type="button" className="app-nav-menu-item is-danger" onClick={handleLogout}>
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="app-nav-toggle"
+              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={menuOpen}
+              aria-controls="primary-navigation"
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              <span aria-hidden="true">{menuOpen ? '\u2715' : '\u2630'}</span>
+            </button>
+          </div>
+        </div>
+      </header>
+    </>
   )
 }
 

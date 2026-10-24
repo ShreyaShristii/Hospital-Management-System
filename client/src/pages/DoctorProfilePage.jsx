@@ -7,7 +7,7 @@ import { getDoctors } from '../features/doctors/doctorSlice'
 function DoctorProfilePage() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
-  const { doctors, isLoading } = useSelector((state) => state.doctors)
+  const { doctors } = useSelector((state) => state.doctors)
   const { user } = useSelector((state) => state.auth)
 
   useEffect(() => {

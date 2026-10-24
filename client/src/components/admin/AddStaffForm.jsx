@@ -73,7 +73,7 @@ function AddStaffForm({ onClose }) {
         })).unwrap()
 
       } else {
-        const userRes = await axios.post(`${API}/auth/register`, {
+        const userRes = await axios.post(`${API}/auth/staff-accounts`, {
           name: formData.name,
           username: formData.username,
           email: formData.email,

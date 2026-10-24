@@ -1,9 +1,10 @@
+const escapeRegex = require('../utils/escapeRegex');
 const EMR = require('../models/EMR');
 const Patient = require('../models/Patient');
 const Doctor = require('../models/Doctor');
 const Staff = require('../models/Staff');
 
-const addEMR = async (req, res) => {
+const addEMR = async (req, res, next) => {
   try {
     const { patientId, diagnosis, doctorId, appointmentId, visitDate, symptoms, notes, followUpDate, bloodPressure, temperature, weight, heartRate, prescription } = req.body;
     
@@ -12,21 +13,14 @@ const addEMR = async (req, res) => {
       return res.status(400).json({ message: 'patientId and diagnosis are required' });
     }
 
-    let finalDoctorId = doctorId;
-    
-    // If doctorId not provided, try to get it from authenticated user
+    // Doctors can only author EMRs under their own profile.
+    const ownDoctor = await Doctor.findOne({ userId: req.user.id });
+    if (req.user.role === 'doctor' && !ownDoctor) {
+      return res.status(400).json({ message: 'Doctor profile not found. Please contact admin.' });
+    }
+    const finalDoctorId = req.user.role === 'doctor' ? ownDoctor._id : doctorId;
     if (!finalDoctorId) {
-      const Doctor = require('../models/Doctor');
-      const doctor = await Doctor.findOne({ userId: req.user.id });
-      if (doctor) {
-        finalDoctorId = doctor._id;
-      } else if (req.user.role === 'doctor') {
-        // If user is a doctor but no profile exists, return error
-        return res.status(400).json({ message: 'Doctor profile not found. Please contact admin.' });
-      } else {
-        // Non-doctor users must provide doctorId
-        return res.status(400).json({ message: 'doctorId is required' });
-      }
+      return res.status(400).json({ message: 'doctorId is required' });
     }
 
     // Create EMR with proper data types
@@ -57,14 +51,11 @@ const addEMR = async (req, res) => {
       });
     res.status(201).json({ message: 'EMR created successfully', emr: populatedEMR });
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Error creating EMR:', error);
-    }
-    res.status(500).json({ message: 'Failed to create EMR. Please try again.' });
+    next(error);
   }
 };
 
-const getAllEMRs = async (req, res) => {
+const getAllEMRs = async (req, res, next) => {
   try {
     const { search, fromDate, toDate } = req.query;
     const { getPaginationParams, getPaginationResponse } = require('../utils/paginationHelper');
@@ -101,10 +92,10 @@ const getAllEMRs = async (req, res) => {
       filter = {
         ...filter,
         $or: [
-          { 'patientId.userId.name': { $regex: search, $options: 'i' } },
-          { diagnosis: { $regex: search, $options: 'i' } },
-          { treatment: { $regex: search, $options: 'i' } },
-          { notes: { $regex: search, $options: 'i' } },
+          { 'patientId.userId.name': { $regex: escapeRegex(search), $options: 'i' } },
+          { diagnosis: { $regex: escapeRegex(search), $options: 'i' } },
+          { treatment: { $regex: escapeRegex(search), $options: 'i' } },
+          { notes: { $regex: escapeRegex(search), $options: 'i' } },
         ],
       };
     }
@@ -119,11 +110,11 @@ const getAllEMRs = async (req, res) => {
 
     res.status(200).json(getPaginationResponse(emrs, total, page, limit));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getEMRById = async (req, res) => {
+const getEMRById = async (req, res, next) => {
   try {
     // populate patient.userId early to compare against the authenticated user
     const emr = await EMR.findById(req.params.id)
@@ -160,11 +151,11 @@ const getEMRById = async (req, res) => {
 
     return res.status(403).json({ message: 'Not authorized to view this EMR' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const getEMRByPatient = async (req, res) => {
+const getEMRByPatient = async (req, res, next) => {
   try {
     // Only allow patient to fetch their own EMRs, doctors for their patients, and certain staff/admin
     const targetPatient = await Patient.findById(req.params.patientId);
@@ -198,11 +189,11 @@ const getEMRByPatient = async (req, res) => {
     ]);
     res.status(200).json(populated);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const updateEMR = async (req, res) => {
+const updateEMR = async (req, res, next) => {
   try {
     const emr = await EMR.findByIdAndUpdate(req.params.id, req.body, { new: true })
       .populate({
@@ -218,11 +209,11 @@ const updateEMR = async (req, res) => {
     }
     res.status(200).json({ message: 'EMR updated successfully', emr });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-const deleteEMR = async (req, res) => {
+const deleteEMR = async (req, res, next) => {
   try {
     const emr = await EMR.findByIdAndDelete(req.params.id);
     if (!emr) {
@@ -230,7 +221,7 @@ const deleteEMR = async (req, res) => {
     }
     res.status(200).json({ message: 'EMR deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    next(error);
   }
 };
 

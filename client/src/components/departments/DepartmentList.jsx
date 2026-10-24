@@ -5,7 +5,7 @@ import Pagination from '../common/Pagination'
 
 function DepartmentList({ onEdit }) {
   const dispatch = useDispatch()
-  const { departments, isLoading, total, pages, page: currentPage, pageSize } = useSelector((state) => state.departments)
+  const { departments, isLoading, total, pages, pageSize } = useSelector((state) => state.departments)
 
   const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
