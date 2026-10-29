@@ -1,16 +1,14 @@
 import { defineConfig } from '@playwright/test';
-import { defineBddConfig } from 'playwright-bdd';
-
-const testDir = defineBddConfig({
-  features: 'tests/features/**/*.feature',
-  steps: 'tests/steps/**/*.js',
-  outputDir: '.features-gen',   
-});
 
 export default defineConfig({
-  testDir,
+  testDir: './tests/e2e',
+  testMatch: 'login.spec.js',
   use: {
     baseURL: 'http://localhost:5173',
-    headless: false,
+  },
+  webServer: {
+    command: 'npm run dev -- --host 127.0.0.1',
+    url: 'http://127.0.0.1:5173',
+    reuseExistingServer: !process.env.CI,
   },
 });

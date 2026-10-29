@@ -245,6 +245,124 @@
   }
 }
 
+/* ---------- Admin sidebar ---------- */
+:root {
+  --sidebar-width: 240px;
+}
+
+body.has-sidebar {
+  padding-left: var(--sidebar-width);
+}
+
+.app-nav--admin .app-nav-inner {
+  max-width: none;
+}
+
+.app-nav--admin .app-nav-toggle,
+.app-nav-admin-brand {
+  display: none;
+}
+
+.app-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 1000;
+  width: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-3);
+  background: var(--color-navy);
+  box-shadow: 4px 0 16px rgba(15, 45, 74, 0.2);
+  overflow-y: auto;
+}
+
+.app-sidebar > .app-nav-brand {
+  height: calc(var(--nav-height) - var(--space-4));
+  padding: 0 var(--space-2);
+}
+
+.app-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.app-sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-sidebar-heading {
+  margin: 0 0 var(--space-1);
+  padding: 0 var(--space-3);
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-sidebar-link {
+  padding: 9px var(--space-3);
+  border-left: 3px solid transparent;
+  border-radius: var(--radius-sm);
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.app-sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.app-sidebar-link.is-active {
+  background: rgba(255, 255, 255, 0.16);
+  border-left-color: #5ea2ff;
+  color: #fff;
+}
+
+.app-sidebar-backdrop {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  body.has-sidebar {
+    padding-left: 0;
+  }
+
+  .app-nav--admin .app-nav-toggle {
+    display: inline-grid;
+  }
+
+  .app-nav-admin-brand {
+    display: block;
+  }
+
+  .app-sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+  }
+
+  .app-sidebar.is-open {
+    transform: translateX(0);
+  }
+
+  .app-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: rgba(15, 45, 74, 0.5);
+  }
+}
+
 @media (max-width: 480px) {
   .app-nav-inner {
     padding: 0 var(--space-3);
