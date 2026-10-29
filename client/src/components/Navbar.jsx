@@ -7,22 +7,43 @@ import './Navbar.css'
 
 const dashboard = { label: 'Dashboard', path: '/dashboard' }
 
+const ADMIN_SECTIONS = [
+  { title: 'Overview', links: [dashboard] },
+  {
+    title: 'People',
+    links: [
+      { label: 'Patients', path: '/patients' },
+      { label: 'Doctors', path: '/doctors' },
+      { label: 'Staff', path: '/staff' },
+    ],
+  },
+  {
+    title: 'Hospital',
+    links: [
+      { label: 'Appointments', path: '/appointments' },
+      { label: 'Admissions', path: '/admissions' },
+      { label: 'Beds', path: '/beds' },
+      { label: 'Departments', path: '/departments' },
+    ],
+  },
+  {
+    title: 'Clinical',
+    links: [
+      { label: 'EMR', path: '/emr' },
+      { label: 'Lab Tests', path: '/lab' },
+      { label: 'Pharmacy', path: '/pharmacy' },
+    ],
+  },
+  {
+    title: 'Finance & Feedback',
+    links: [
+      { label: 'Bills', path: '/bills' },
+      { label: 'Reviews', path: '/reviews' },
+    ],
+  },
+]
+
 const NAV_LINKS = {
-  admin: [
-    dashboard,
-    { label: 'Patients', path: '/patients' },
-    { label: 'Doctors', path: '/doctors' },
-    { label: 'Staff', path: '/staff' },
-    { label: 'Appointments', path: '/appointments' },
-    { label: 'Admissions', path: '/admissions' },
-    { label: 'Beds', path: '/beds' },
-    { label: 'Departments', path: '/departments' },
-    { label: 'Bills', path: '/bills' },
-    { label: 'EMR', path: '/emr' },
-    { label: 'Lab Tests', path: '/lab' },
-    { label: 'Pharmacy', path: '/pharmacy' },
-    { label: 'Reviews', path: '/reviews' },
-  ],
   doctor: [
     dashboard,
     { label: 'My Appointments', path: '/appointments' },
@@ -115,18 +136,110 @@ function Navbar() {
     navigate('/login')
   }
 
+  const isAdmin = user?.role === 'admin'
   const links = NAV_LINKS[user?.role] || []
   const profilePath = PROFILE_PATH[user?.role] || '/profile'
+
+  // Reserves room for the fixed sidebar on every page that renders the Navbar.
+  useEffect(() => {
+    document.body.classList.toggle('has-sidebar', isAdmin)
+    return () => document.body.classList.remove('has-sidebar')
+  }, [isAdmin])
+
+  const brand = (
+    <Link to="/dashboard" className="app-nav-brand" aria-label="HMS home">
+      <span className="app-nav-logo" aria-hidden="true">H</span>
+      <span className="app-nav-brand-text">HMS</span>
+    </Link>
+  )
+
+  const toggle = (
+    <button
+      type="button"
+      className="app-nav-toggle"
+      aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+      aria-expanded={menuOpen}
+      aria-controls="primary-navigation"
+      onClick={() => setMenuOpen((o) => !o)}
+    >
+      <span aria-hidden="true">{menuOpen ? '\u2715' : '\u2630'}</span>
+    </button>
+  )
+
+  const actions = (
+    <div className="app-nav-actions">
+      <NotificationBell />
+
+      <div className="app-nav-user" ref={userMenuRef}>
+        <button
+          type="button"
+          className="app-nav-user-btn"
+          aria-haspopup="menu"
+          aria-expanded={userMenuOpen}
+          onClick={() => setUserMenuOpen((o) => !o)}
+        >
+          <span className="app-nav-avatar" aria-hidden="true">{initials(user?.name)}</span>
+          <span className="app-nav-user-text">
+            <span className="app-nav-user-name">{user?.name || 'Account'}</span>
+            <span className="app-nav-user-role">{roleLabel(user?.role)}</span>
+          </span>
+        </button>
+
+        {userMenuOpen && (
+          <div className="app-nav-menu" role="menu">
+            <Link role="menuitem" to={profilePath} className="app-nav-menu-item">My profile</Link>
+            <Link role="menuitem" to="/profile" className="app-nav-menu-item">Account &amp; password</Link>
+            <button role="menuitem" type="button" className="app-nav-menu-item is-danger" onClick={handleLogout}>
+              Sign out
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  if (isAdmin) {
+    return (
+      <>
+        <a href="#main-content" className="skip-link">Skip to main content</a>
+        <header className="app-nav app-nav--admin">
+          <div className="app-nav-inner">
+            {toggle}
+            <div className="app-nav-admin-brand">{brand}</div>
+            {actions}
+          </div>
+        </header>
+
+        {menuOpen && <div className="app-sidebar-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />}
+        <aside className={`app-sidebar ${menuOpen ? 'is-open' : ''}`}>
+          {brand}
+          <nav id="primary-navigation" aria-label="Primary" className="app-sidebar-nav">
+            {ADMIN_SECTIONS.map((section) => (
+              <div key={section.title} className="app-sidebar-section">
+                <p className="app-sidebar-heading">{section.title}</p>
+                {section.links.map((link) => (
+                  <NavLink
+                    key={link.path}
+                    to={link.path}
+                    className={({ isActive }) => `app-sidebar-link ${isActive ? 'is-active' : ''}`}
+                  >
+                    {link.label}
+                  </NavLink>
+                ))}
+              </div>
+            ))}
+          </nav>
+        </aside>
+      </>
+    )
+  }
 
   return (
     <>
       <a href="#main-content" className="skip-link">Skip to main content</a>
       <header className="app-nav">
         <div className="app-nav-inner">
-          <Link to="/dashboard" className="app-nav-brand" aria-label="HMS home">
-            <span className="app-nav-logo" aria-hidden="true">H</span>
-            <span className="app-nav-brand-text">HMS</span>
-          </Link>
+          {brand}
 
           <nav
             id="primary-navigation"
@@ -144,46 +257,8 @@ function Navbar() {
             ))}
           </nav>
 
-          <div className="app-nav-actions">
-            <NotificationBell />
-
-            <div className="app-nav-user" ref={userMenuRef}>
-              <button
-                type="button"
-                className="app-nav-user-btn"
-                aria-haspopup="menu"
-                aria-expanded={userMenuOpen}
-                onClick={() => setUserMenuOpen((o) => !o)}
-              >
-                <span className="app-nav-avatar" aria-hidden="true">{initials(user?.name)}</span>
-                <span className="app-nav-user-text">
-                  <span className="app-nav-user-name">{user?.name || 'Account'}</span>
-                  <span className="app-nav-user-role">{roleLabel(user?.role)}</span>
-                </span>
-              </button>
-
-              {userMenuOpen && (
-                <div className="app-nav-menu" role="menu">
-                  <Link role="menuitem" to={profilePath} className="app-nav-menu-item">My profile</Link>
-                  <Link role="menuitem" to="/profile" className="app-nav-menu-item">Account &amp; password</Link>
-                  <button role="menuitem" type="button" className="app-nav-menu-item is-danger" onClick={handleLogout}>
-                    Sign out
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <button
-              type="button"
-              className="app-nav-toggle"
-              aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={menuOpen}
-              aria-controls="primary-navigation"
-              onClick={() => setMenuOpen((o) => !o)}
-            >
-              <span aria-hidden="true">{menuOpen ? '\u2715' : '\u2630'}</span>
-            </button>
-          </div>
+          {actions}
+          {toggle}
         </div>
       </header>
     </>
