@@ -1,6 +1,8 @@
 const escapeRegex = require('../utils/escapeRegex');
 const Patient = require('../models/Patient');
 const User = require('../models/User');
+const Doctor = require('../models/Doctor');
+const Appointment = require('../models/Appointment');
 
 const PATIENT_EDITABLE_FIELDS = [
   'age', 'gender', 'bloodGroup', 'allergies', 'address',
@@ -96,6 +98,17 @@ const getAllPatients = async (req, res, next) => {
 
     // Patients may only ever see their own record.
     if (req.user.role === 'patient') filter = { $and: [filter, { userId: req.user.id }] };
+
+    // Doctors may only see patients linked to their own appointments.
+    if (req.user.role === 'doctor') {
+      const doctor = await Doctor.findOne({ userId: req.user.id });
+      if (!doctor) {
+        return res.status(404).json({ message: 'Doctor profile not found' });
+      }
+
+      const patientIds = await Appointment.distinct('patientId', { doctorId: doctor._id });
+      filter = { $and: [filter, { _id: { $in: patientIds } }] };
+    }
 
     const total = await Patient.countDocuments(filter);
     const patients = await Patient.find(filter)
